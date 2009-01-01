@@ -42,38 +42,6 @@ usage(void)
 	exit(1);
 }
 
-static void
-cleanup_document(struct document *docs)
-{
-	struct document *d, *next_d;
-	struct article *a, *next_a;
-	struct enclosure *e, *next_e;
-
-	for (d = docs; d != NULL; d = next_d) {
-		next_d = SLIST_NEXT(d, next);
-		free(d->title);
-		for (a = SLIST_FIRST(&d->articles); a != NULL; a = next_a) {
-			next_a = SLIST_NEXT(a, next);
-			free(a->title);
-			free(a->link);
-			free(a->descr);
-			free(a->author);
-			free(a->id);
-			free(a->date);
-			for (e = SLIST_FIRST(&a->enclosures); e != NULL;
-			    e = next_e) {
-				next_e = SLIST_NEXT(e, next);
-				free(e->url);
-				free(e->size);
-				free(e->type);
-				free(e);
-			}
-			free(a);
-		}
-		free(d);
-	}
-}
-
 void
 run_url(char *url)
 {
@@ -84,7 +52,6 @@ run_url(char *url)
 	docs = parse_document(fin);
 	fclose(fin);
 	render_ouput(docs);
-	cleanup_document(docs);
 }
 
 int
