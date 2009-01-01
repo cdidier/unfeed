@@ -27,12 +27,12 @@
 FILE		*request_url(char *);
 struct document	*parse_document(FILE *);
 void		 run_config(const char *);
-void		 render_ouput(struct document *);
+void		 output_text(struct document *, const char *);
 
-
-struct tm	  param_time;
-char		 *param_output;
-int		  param_fhtml;
+void		(*output)(struct document *, const char *);
+char		*param_output;
+struct tm	 param_time;
+int		 param_fhtml;
 
 static void
 usage(void)
@@ -51,7 +51,8 @@ run_url(char *url)
 	fin = request_url(url);
 	docs = parse_document(fin);
 	fclose(fin);
-	render_ouput(docs);
+	if (output != NULL)
+		output(docs, param_output);
 }
 
 int
@@ -59,6 +60,7 @@ main(int argc, char *argv[])
 {
 	char ch, *config_file, *t;
 
+	output = output_text;
 	memset(&param_time, 0, sizeof(struct tm));
 	param_output = config_file = NULL;
 	param_fhtml = 0;
@@ -71,7 +73,12 @@ main(int argc, char *argv[])
 			param_fhtml = 1;
 			break;
 		case 'o':
-			param_output = optarg;
+			if (strncmp(optarg, "text", 4) == 0)
+				output = output_text;
+			else if (strncmp(optarg, "null", 4) == 0)
+				output = NULL;
+			else
+				errx(1, "Unknown output");
 			break;
 		case 't':
 			t = strptime(optarg, "%Y%m%d%H%M", &param_time);

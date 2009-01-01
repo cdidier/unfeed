@@ -65,11 +65,8 @@ render_text_plain(struct document *docs)
 }
 
 void
-render_ouput(struct document *docs)
+output_text(struct document *docs, const char *param)
 {
-	extern char *param_output;
-	
 	format_documents(docs);
-	if (param_output == NULL || strcasecmp(param_output, "plain") == 0)
-		render_text_plain(docs);
+	render_text_plain(docs);
 }
