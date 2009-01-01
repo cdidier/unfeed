@@ -37,11 +37,11 @@
 FILE *
 request_url(char *url)
 {
-	char *newline, *host, *path, *credentials, *port, *cause, *buf;
+	char *newline, *host, *path, *credentials, *port, *cause;
+	char buf[BUFSIZ];
 	int s, error, save_errno;
 	struct addrinfo hints, *res0, *res;
 	FILE *fin;
-	size_t len;
 
 	/* Extract URL parts */
 	if ((newline = strdup(url)) == NULL)
@@ -109,19 +109,14 @@ again:
 	free(newline);
 
 	/* Parse headers */
-	if ((buf = fparseln(fin, &len, NULL, "\0\0\0", 0)) == NULL)
-		err(1, "fparseln");
-	while (len > 0 && (buf[len-1] == '\r' || buf[len-1] == '\n'))
-		buf[--len] = '\0';
-	free(buf);
+	if (fgets(buf, sizeof(buf), fin) == NULL)
+		err(1, "fgets");
+	buf[strcspn(buf, "\n")] = '\0';
 	/* TODO parse first line and extract codes */
-	while (len != 0) {
-		if ((buf = fparseln(fin, &len, NULL, "\0\0\0", 0)) == NULL)
-			err(1, "Receiving HTTP reply");
-		while (len > 0 && (buf[len-1] == '\r' || buf[len-1] == '\n'))
-			buf[--len] = '\0';
+	while (*buf != '\r' && *buf != '\0'
+	    && fgets(buf, sizeof(buf), fin) != NULL) {
+		buf[strcspn(buf, "\n")] = '\0';
 		/* TODO parse other lines */
-		free(buf);
 	}
 
 	return fin;

@@ -102,16 +102,14 @@ run_config(const char *config_file)
 	FILE *fin;
 	SLIST_HEAD(, feed) list = SLIST_HEAD_INITIALIZER(list);
 	struct feed *feed, *tmp;
-	char *buf, *s, *t;
-	size_t len;
+	char buf[BUFSIZ], *s, *t;
 	int line;
 
 	if ((fin = fopen(config_file, "r")) == NULL)
 		err(1, "%s", config_file);
 	line = 1;
-	while ((buf = fparseln(fin, &len, NULL, "\0\0\0", 0)) != NULL) {
-		while (len > 0 && (buf[len-1] == '\r' || buf[len-1] == '\n'))
-			buf[--len] = '\0';
+	while (fgets(buf, sizeof(buf), fin) != NULL) {
+		buf[strcspn(buf, "\n")] = '\0';
 		if ((s = strpbrk(buf, " \t")) != NULL) {
 			if (*s != '\0') {
 				*s++ = '\0';
@@ -139,7 +137,6 @@ run_config(const char *config_file)
 			SLIST_INSERT_AFTER(tmp, feed, next);
 		else
 			SLIST_INSERT_HEAD(&list, feed, next);
-		free(buf);
 		++line;
 	}
 	fclose(fin);
