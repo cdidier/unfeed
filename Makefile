@@ -1,7 +1,7 @@
 BIN= unfeed
 
 CFLAGS=-g -Wall -W -Wpointer-arith -Wbad-function-cast
-LDFLAGS=-lutil -lexpat
+LDFLAGS=-lexpat
 
 SRCS= config.c fetch.c format.c main.c parser.c tools.c \
 	output_text.c
