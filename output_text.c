@@ -31,6 +31,7 @@ render_text_plain(struct document *docs)
 	SLIST_HEAD(, document) list;
 	struct document *d;
 	struct article *a;
+	struct category *cat;
 
 	SLIST_FIRST(&list) = docs;
 	SLIST_FOREACH(d, &list, next) {
@@ -44,6 +45,16 @@ render_text_plain(struct document *docs)
 				printf("Link: %s\n", a->link);
 			if (a->author != NULL && *a->author != '\0')
 				printf("Author: %s\n", a->author);
+			if (!SLIST_EMPTY(&a->categories)) {
+				printf("Category: ");
+				SLIST_FOREACH(cat, &a->categories, next) {
+					printf("%s", cat->name);
+					if (SLIST_NEXT(cat, next) != NULL)
+						printf(" / ");
+					else
+						printf("\n");
+				}
+			}
 			if (a->date != NULL && *a->date != '\0')
 				printf("Date: %s\n", a->date);
 			if (a->descr != NULL && *a->descr != '\0')

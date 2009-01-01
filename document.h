@@ -24,16 +24,22 @@ struct article {
 	char	*author;
 	char	*id;
 	char	*date;
-	char	*category;
+	SLIST_HEAD(, category)	categories;
 	SLIST_HEAD(, enclosure)	enclosures;
 	SLIST_ENTRY(article)	next;
 };
 
 #define INIT_ARTICLE(_a) do {						\
 		(_a)->title = (_a)->link = (_a)->descr = (_a)->author	\
-		    = (_a)->id = (_a)->date = (_a)->category = NULL;	\
+		    = (_a)->id = (_a)->date = NULL;			\
+		SLIST_INIT(&(_a)->categories);				\
 		SLIST_INIT(&(_a)->enclosures);				\
 	} while(/* CONSTCOND */ 0)
+
+struct category {
+	char	*name;
+	SLIST_ENTRY(category)	next;
+};
 
 struct enclosure {
 	char	*url;
@@ -41,9 +47,5 @@ struct enclosure {
 	char	*type;
 	SLIST_ENTRY(enclosure)	next;
 };
-
-#define INIT_ENCLOSURE(_e) do {						\
-		(_e)->url = (_e)->size = (_e)->type = NULL;		\
-	} while(/* CONSTCOND */ 0)
 
 #endif
