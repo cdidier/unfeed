@@ -65,7 +65,7 @@ render_text_plain(struct document *docs)
 }
 
 void
-output_text(struct document *docs, const char *param)
+output_text(struct document *docs, const char *args)
 {
 	format_documents(docs);
 	render_text_plain(docs);
