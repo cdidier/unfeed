@@ -1,10 +1,10 @@
 BIN= unfeed
-CC= pcc
 
-CFLAGS=-ggdb -Wall -W -Wtraditional -Wpointer-arith -Wbad-function-cast
+CFLAGS=-g -Wall -W -Wpointer-arith -Wbad-function-cast
 LDFLAGS=-lutil -lexpat
 
-SRCS= config.c fetch.c format.c main.c output.c parser.c tools.c
+SRCS= config.c fetch.c format.c main.c parser.c tools.c \
+	output_text.c
 OBJS= ${SRCS:.c=.o}
 
 all: ${BIN}
