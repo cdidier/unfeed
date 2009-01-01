@@ -72,8 +72,10 @@ write_config(const char *config_file, struct feed *feeds)
 	struct tm time_null;
 	char time[13];
 
-	if ((fin = fopen(config_file, "w")) == NULL)
-		err(1, "%s", config_file);
+	if ((fin = fopen(config_file, "w")) == NULL) {
+		warn("%s", config_file);
+		return;
+	}
 	SLIST_FIRST(&list) = feeds;
 	fseek(fin, 0L, SEEK_SET);
 	SLIST_FOREACH(feed, &list, next) {
