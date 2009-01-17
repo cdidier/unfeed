@@ -132,7 +132,7 @@ run_config(const char *config_file)
 		/* insert at the end of the list */
 		tmp = NULL;
 		SLIST_FOREACH(tmp, &list, next)
-			if (SLIST_NEXT(tmp, next) == SLIST_END(&list))
+			if (SLIST_NEXT(tmp, next) == NULL)
 				break;
 		if (tmp != NULL)
 			SLIST_INSERT_AFTER(tmp, feed, next);
