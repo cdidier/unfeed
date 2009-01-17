@@ -23,10 +23,8 @@
 
 #include "document.h"
 
-void format_documents(struct document *);
-
-static void
-render_text_plain(struct document *docs)
+void
+output_text(struct document *docs, const char *args)
 {
 	SLIST_HEAD(, document) list;
 	struct document *d;
@@ -62,11 +60,4 @@ render_text_plain(struct document *docs)
 			printf("\n\n");
 		}
 	}
-}
-
-void
-output_text(struct document *docs, const char *args)
-{
-	format_documents(docs);
-	render_text_plain(docs);
 }
