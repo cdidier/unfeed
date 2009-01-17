@@ -25,15 +25,16 @@
 void
 strchomp(char *s)
 {
-	size_t len, i, spaces;
+	size_t i;
 
-	len = strlen(s);
-	while (*s != '\0' && isspace(s[len-1]))
-        	s[--len] = '\0';
-	for (spaces = 0; *s != '\0' && isspace(*s); ++s)
-		++spaces;
-	for (i = 0; i < len-spaces+1; ++i)
-		s[i-spaces] = s[i];
+	/* remove spaces at the end of the string */
+	for (i = strlen(s); i > 0 && isspace(s[i-1]); --i);
+	s[i] = '\0';
+	/* remove spaces at the beginning of the string */
+	for (i = 0; s[i] != '\0' && isspace(s[i]); ++i);
+	if (i > 0)
+		for (; *s != '\0'; ++s)
+			*s = *(s+i);
 }
 
 void
