@@ -38,19 +38,20 @@ int	insert_text(char **, const char *, size_t);
 #define RSS_AUTHOR	"author"
 #define RSS_ID		"guid"
 #define RSS_DATE	"pubDate"
+#define RSS_CATEGORY	"category"
 #define RSS_ENCLOSURE	"enclosure"
 
 static SLIST_HEAD(, document) documents;
 static struct document	*cd; /* current document */
 static struct article	*ca; /* current article */
 static int	 depth;
-static int	 data_level;
+static int	 read_data;
 static char	*data;
 
 static void XMLCALL
 rss_start_elt(void *user_data, const char *name, const char **atts)
 {
-	switch (depth) {
+	switch (depth++) {
 	case 0:
 		if (strcasecmp(name, RSS_DOC) == 0) {
 			if ((cd = malloc(sizeof(struct document))) == NULL)
@@ -63,7 +64,7 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 		if (cd == NULL)
 			break;
 		if (strcasecmp(name, RSS_TITLE) == 0)
-			data_level = 1;
+			read_data = 1;
 		else if (strcasecmp(name, RSS_ARTICLE) == 0) {
 			if ((ca = malloc(sizeof(struct article))) == NULL)
 				err(1, "malloc");
@@ -79,30 +80,28 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 		    || (ca->descr == NULL && strcasecmp(name, RSS_DESCR) == 0)
 		    || (ca->author == NULL && strcasecmp(name, RSS_AUTHOR) == 0)
 		    || (ca->id == NULL && strcasecmp(name, RSS_ID) == 0)
-		    || (ca->date == NULL && strcasecmp(name, RSS_DATE) == 0))
-			data_level = 2;
+		    || (ca->date == NULL && strcasecmp(name, RSS_DATE) == 0)
+		    || (strcasecmp(name, RSS_CATEGORY) == 0))
+			read_data = 1;
 		else if (strcasecmp(name, RSS_ENCLOSURE) == 0) {
-
+			/* TODO parse atts */
 		}
 		break;
 	}
-	depth++;
 }
 
 static void XMLCALL
 rss_data_handler(void *user_data, const XML_Char *s, int len)
 {
-	if (data_level == 0 || len < 0)
-		return;
-	if (insert_text(&data, s, (size_t)len) < 0)
-		err(1, "insert_text");
+	if (read_data != 0)
+		if (insert_text(&data, s, (size_t)len) == -1)
+			err(1, "insert_text");
 }
 
 static void XMLCALL
 rss_end_elt(void *user_data, const char *name)
 {
-	depth--;
-	switch (depth) {
+	switch (--depth) {
 	case 0:
 		if (strcasecmp(name, RSS_DOC) == 0)
 			cd = NULL;
@@ -112,32 +111,42 @@ rss_end_elt(void *user_data, const char *name)
 			ca = NULL;
 			break;
 		}
-		if (data_level != 1 || data == NULL || cd == NULL)
+		if (data == NULL || cd == NULL)
 			break;
 		strchomp(data);
 		if (strcasecmp(name, RSS_TITLE) == 0)
 			cd->title = data;
-		data = NULL;
-		break;
+		else
+			free(data);
+		goto out;
 	case 2:
-		if (data_level != 2 || data == NULL || ca == NULL)
+		if (data == NULL || ca == NULL)
 			break;
 		strchomp(data);
 		if (strcasecmp(name, RSS_TITLE) == 0)
 			ca->title = data;
-		if (strcasecmp(name, RSS_LINK) == 0)
+		else if (strcasecmp(name, RSS_LINK) == 0)
 			ca->link = data;
-		if (strcasecmp(name, RSS_DESCR) == 0)
+		else if (strcasecmp(name, RSS_DESCR) == 0)
 			ca->descr = data;
-		if (strcasecmp(name, RSS_AUTHOR) == 0)
+		else if (strcasecmp(name, RSS_AUTHOR) == 0)
 			ca->author = data;
-		if (strcasecmp(name, RSS_ID) == 0)
+		else if (strcasecmp(name, RSS_ID) == 0)
 			ca->id = data;
-		if (strcasecmp(name, RSS_DATE) == 0)
+		else if (strcasecmp(name, RSS_DATE) == 0)
 			ca->date = data;
-		data = NULL;
-		break;
+		else if (strcasecmp(name, RSS_CATEGORY) == 0) {
+			struct category *cat;
+
+			if ((cat = malloc(sizeof(struct category))) == NULL)
+				err(1, "malloc");
+			cat->name = data;
+			SLIST_INSERT_HEAD(&ca->categories, cat, next);
+		} else
+			free(data);
 	}
+out:	read_data = 0;
+	data = NULL;
 }
 
 static void XMLCALL
@@ -165,7 +174,9 @@ start_elt(void *user_data, const char *name, const char **atts)
 		SLIST_INIT(&documents);
 		cd = NULL;
 		ca = NULL;
-		depth = data_level = 0;
+		depth = 0;
+		read_data = 0;
+		data = NULL;
         } else
                 errx(1, "Unsupported feed");
 }
