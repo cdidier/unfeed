@@ -30,17 +30,10 @@ void	strchomp(char *);
 void	stroneline(char *);
 int	insert_text(char **, const char *, size_t);
 
-#define FORMAT_HTML \
-	"<html><head>" \
-	"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" \
-	"</head><body>%s</body></html>"
-
 static char *
 format_text(const char *cmd, const char *text)
 {
 	extern char **environ;
-	extern int param_fhtml;
-	FILE *fin;
 	char buf[BUFSIZ], *str;
 	int pip_read[2], pip_write[2];
 	size_t len;
@@ -68,16 +61,9 @@ format_text(const char *cmd, const char *text)
 	default:
 		close(pip_read[1]);
 		close(pip_write[0]);
-		if (param_fhtml) {
-			if ((fin = fdopen(pip_write[1], "w")) == NULL)
-				err(1, "fdopen");
-			fprintf(fin, FORMAT_HTML, text);
-			fclose(fin);
-		} else {
-			len = strlen(text);
-			if (write(pip_write[1], text, len) < 0)
-				err(1, "write");
-		}
+		len = strlen(text);
+		if (write(pip_write[1], text, len) < 0)
+			err(1, "write");
 		close(pip_write[1]);
 		str = NULL;
 		while ((nr = read(pip_read[0], buf, BUFSIZ)) != -1 && nr != 0) {
