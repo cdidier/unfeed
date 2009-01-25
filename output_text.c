@@ -30,6 +30,7 @@ output_text(struct document *docs, const char *args)
 	struct document *d;
 	struct article *a;
 	struct category *cat;
+	char buf[BUFSIZ];
 
 	SLIST_FIRST(&list) = docs;
 	SLIST_FOREACH(d, &list, next) {
@@ -53,8 +54,12 @@ output_text(struct document *docs, const char *args)
 						printf("\n");
 				}
 			}
-			if (a->date != NULL && *a->date != '\0')
-				printf("Date: %s\n", a->date);
+			if (a->time != (time_t)-1) {
+				strftime(buf, sizeof(buf), "%a, %d %b %Y %T GMT",
+				   localtime(&a->time)); 
+				printf("Date: %s\n", buf);
+			} else if (a->date != NULL && *a->date != '\0')
+				printf("Date: %s\n (malformed)", a->date);
 			if (a->descr != NULL && *a->descr != '\0')
 				printf("\n%s\n", a->descr);
 			printf("\n\n");

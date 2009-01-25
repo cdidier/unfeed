@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 void
 strchomp(char *s)
@@ -85,4 +86,72 @@ insert_text(char **s, const char *text, size_t len)
 		(*s)[oldlen+len] = '\0';
 	}
 	return 0;
+}
+
+
+static long
+parse_timezone(const char *tz)
+{
+	const char *rfc822_timezones[26][4] = {
+		{ "M", NULL },			/* UTC-12 */
+		{ "L", NULL },
+		{ "K", NULL },
+		{ "I", NULL },
+		{ "H", "PST", NULL }, 		/* UTC-8 */
+		{ "G", "MST", "PDT", NULL },	/* UTC-7 */
+		{ "F", "CST", "MDT", NULL },	/* UTC-6 */
+		{ "E", "EST", "CDT", NULL },	/* UTC-5 */
+		{ "D", "EDT", NULL },		/* UTC-4 */
+		{ "C", NULL },
+		{ "B", NULL },
+		{ "A", NULL },
+		{ "Z", "UT", "GMT", NULL },	/* UTC */
+		{ "N", NULL },
+		{ "O", NULL },
+		{ "P", NULL },
+		{ "Q", NULL },
+		{ "R", NULL },
+		{ "S", NULL },
+		{ "T", NULL },
+		{ "U", NULL },
+		{ "V", NULL },
+		{ "W", NULL },
+		{ "X", NULL },
+		{ "Y", NULL },			/* UTC+12 */
+		{ NULL }
+	};
+	long i, j;
+
+	if ((*tz == '+' || *tz == '-') && strlen(tz) == 5) {
+		i = atoi(tz);
+		return ((i/100)*60 + i%100) * 60;
+	}
+	for (i = 0; rfc822_timezones[i] != NULL; ++i)
+		for (j = 0; rfc822_timezones[i][j] != NULL; ++j)
+			if (strcmp(rfc822_timezones[i][j], tz) == 0)
+				return (i - 12) * 3600;
+	return 0;
+}
+
+time_t
+rfc822_date(const char *date)
+{
+	struct tm tm;
+	long offset;
+	char *p;
+	int i;
+	char *formats[] = { "%d %b %Y %T", "%d %b %Y %H:%M", "%d %b %y %T",
+	     "%d %b %y %H:%M", NULL };
+
+	memset(&tm, 0, sizeof(struct tm));
+	if ((p = strchr(date, ',')) != NULL)
+		date = p+2; /* ignore day of the week */
+	for (i = 0; formats[i] != NULL
+	    && (p = strptime(date, formats[i], &tm)) == NULL; ++i);
+	if (p == NULL)
+		return (time_t)-1;
+	strchomp(p);
+	tm.tm_isdst = -1;
+	tm.tm_gmtoff = offset = *p != '\0' ? parse_timezone(p) : 0;
+	return mktime(&tm) - offset;
 }

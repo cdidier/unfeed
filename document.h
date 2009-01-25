@@ -24,6 +24,7 @@ struct article {
 	char	*author;
 	char	*id;
 	char	*date;
+	time_t	 time;
 	SLIST_HEAD(, category)	categories;
 	SLIST_HEAD(, enclosure)	enclosures;
 	SLIST_ENTRY(article)	next;
@@ -32,6 +33,7 @@ struct article {
 #define INIT_ARTICLE(_a) do {						\
 		(_a)->title = (_a)->link = (_a)->descr = (_a)->author	\
 		    = (_a)->id = (_a)->date = NULL;			\
+		(_a)->time = (time_t)-1;				\
 		SLIST_INIT(&(_a)->categories);				\
 		SLIST_INIT(&(_a)->enclosures);				\
 	} while(/* CONSTCOND */ 0)

@@ -29,6 +29,7 @@
 
 void	strchomp(char *);
 int	insert_text(char **, const char *, size_t);
+time_t	rfc822_date(const char *);
 
 #define RSS_DOC		"channel"
 #define RSS_ARTICLE	"item"
@@ -133,9 +134,10 @@ rss_end_elt(void *user_data, const char *name)
 			ca->author = data;
 		else if (strcasecmp(name, RSS_ID) == 0)
 			ca->id = data;
-		else if (strcasecmp(name, RSS_DATE) == 0)
+		else if (strcasecmp(name, RSS_DATE) == 0) {
 			ca->date = data;
-		else if (strcasecmp(name, RSS_CATEGORY) == 0) {
+			ca->time = rfc822_date(data);
+		} else if (strcasecmp(name, RSS_CATEGORY) == 0) {
 			struct category *cat;
 
 			if ((cat = malloc(sizeof(struct category))) == NULL)
