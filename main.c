@@ -39,8 +39,8 @@ struct tm	 param_time;
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unfeed [-t time] [-o output_module] -f file\n"
-			"       unfeed [-t time] [-o output_module] url\n");
+	fprintf(stderr, "usage: unfeed [-t time] [-o output_module:module_args] -f file\n"
+			"       unfeed [-t time] [-o output_module:module_args] url\n");
 	exit(1);
 }
 
