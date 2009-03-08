@@ -59,7 +59,7 @@ output_text(struct document *docs, const char *args)
 				   localtime(&a->time)); 
 				printf("Date: %s\n", buf);
 			} else if (a->date != NULL && *a->date != '\0')
-				printf("Date: %s\n (malformed)", a->date);
+				printf("Date: %s (malformed)\n", a->date);
 			if (a->descr != NULL && *a->descr != '\0')
 				printf("\n%s\n", a->descr);
 			printf("\n\n");
