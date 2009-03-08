@@ -146,6 +146,7 @@ rfc822_date(const char *date)
 	memset(&tm, 0, sizeof(struct tm));
 	if ((p = strchr(date, ',')) != NULL)
 		date = p+2; /* ignore day of the week */
+	strchomp(date);
 	for (i = 0; formats[i] != NULL
 	    && (p = strptime(date, formats[i], &tm)) == NULL; ++i);
 	if (p == NULL)
