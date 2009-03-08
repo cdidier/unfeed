@@ -134,7 +134,7 @@ parse_timezone(const char *tz)
 }
 
 time_t
-rfc822_date(const char *date)
+rfc822_date(char *date)
 {
 	struct tm tm;
 	long offset;
