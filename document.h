@@ -6,18 +6,18 @@
 #include <stdlib.h>
 #include <sys/queue.h>
 
-struct document {
+struct feed {
 	char	*title;
-	SLIST_HEAD(, article)	articles;
-	SLIST_ENTRY(document)	next;
+	SLIST_HEAD(, item)	items;
+	SLIST_ENTRY(feed)	next;
 };
 
-#define INIT_DOCUMENT(_d) do {						\
+#define INIT_FEED(_d) do {						\
 		(_d)->title = NULL;					\
-		SLIST_INIT(&(_d)->articles);				\
-	} while(/* CONSTCOND */ 0)
+		SLIST_INIT(&(_d)->items);				\
+	} while(0)
 
-struct article {
+struct item {
 	char	*title;
 	char	*link;
 	char	*descr;
@@ -27,16 +27,16 @@ struct article {
 	time_t	 time;
 	SLIST_HEAD(, category)	categories;
 	SLIST_HEAD(, enclosure)	enclosures;
-	SLIST_ENTRY(article)	next;
+	SLIST_ENTRY(item)	next;
 };
 
-#define INIT_ARTICLE(_a) do {						\
+#define INIT_ITEM(_a) do {						\
 		(_a)->title = (_a)->link = (_a)->descr = (_a)->author	\
 		    = (_a)->id = (_a)->date = NULL;			\
 		(_a)->time = (time_t)-1;				\
 		SLIST_INIT(&(_a)->categories);				\
 		SLIST_INIT(&(_a)->enclosures);				\
-	} while(/* CONSTCOND */ 0)
+	} while(0)
 
 struct category {
 	char	*name;

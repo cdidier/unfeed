@@ -42,9 +42,9 @@ time_t	rfc822_date(const char *);
 #define RSS_CATEGORY	"category"
 #define RSS_ENCLOSURE	"enclosure"
 
-static SLIST_HEAD(, document) documents;
-static struct document	*cd; /* current document */
-static struct article	*ca; /* current article */
+static SLIST_HEAD(, feed) feeds;
+static struct feed	*cf; /* current feed */
+static struct item	*ci; /* current item */
 static int	 depth;
 static int	 read_data;
 static char	*data;
@@ -55,33 +55,33 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 	switch (depth++) {
 	case 0:
 		if (strcasecmp(name, RSS_DOC) == 0) {
-			if ((cd = malloc(sizeof(struct document))) == NULL)
+			if ((cf = malloc(sizeof(struct feed))) == NULL)
 				err(1, "malloc");
-			INIT_DOCUMENT(cd);
-			SLIST_INSERT_HEAD(&documents, cd, next);
+			INIT_FEED(cf);
+			SLIST_INSERT_HEAD(&feeds, cf, next);
 		}
 		break;
 	case 1:
-		if (cd == NULL)
+		if (cf == NULL)
 			break;
 		if (strcasecmp(name, RSS_TITLE) == 0)
 			read_data = 1;
 		else if (strcasecmp(name, RSS_ARTICLE) == 0) {
-			if ((ca = malloc(sizeof(struct article))) == NULL)
+			if ((ci = malloc(sizeof(struct item))) == NULL)
 				err(1, "malloc");
-			INIT_ARTICLE(ca);
-			SLIST_INSERT_HEAD(&cd->articles, ca, next);
+			INIT_ITEM(ci);
+			SLIST_INSERT_HEAD(&cf->items, ci, next);
 		}
 		break;
 	case 2:
-		if (ca == NULL)
+		if (ci == NULL)
 			break;
-		if ((ca->title == NULL && strcasecmp(name, RSS_TITLE) == 0)
-		    || (ca->link == NULL && strcasecmp(name, RSS_LINK) == 0)
-		    || (ca->descr == NULL && strcasecmp(name, RSS_DESCR) == 0)
-		    || (ca->author == NULL && strcasecmp(name, RSS_AUTHOR) == 0)
-		    || (ca->id == NULL && strcasecmp(name, RSS_ID) == 0)
-		    || (ca->date == NULL && strcasecmp(name, RSS_DATE) == 0)
+		if ((ci->title == NULL && strcasecmp(name, RSS_TITLE) == 0)
+		    || (ci->link == NULL && strcasecmp(name, RSS_LINK) == 0)
+		    || (ci->descr == NULL && strcasecmp(name, RSS_DESCR) == 0)
+		    || (ci->author == NULL && strcasecmp(name, RSS_AUTHOR) == 0)
+		    || (ci->id == NULL && strcasecmp(name, RSS_ID) == 0)
+		    || (ci->date == NULL && strcasecmp(name, RSS_DATE) == 0)
 		    || (strcasecmp(name, RSS_CATEGORY) == 0))
 			read_data = 1;
 		else if (strcasecmp(name, RSS_ENCLOSURE) == 0) {
@@ -105,45 +105,45 @@ rss_end_elt(void *user_data, const char *name)
 	switch (--depth) {
 	case 0:
 		if (strcasecmp(name, RSS_DOC) == 0)
-			cd = NULL;
+			cf = NULL;
 		break;
 	case 1:
 		if (strcasecmp(name, RSS_ARTICLE) == 0) {
-			ca = NULL;
+			ci = NULL;
 			break;
 		}
-		if (data == NULL || cd == NULL)
+		if (data == NULL || cf == NULL)
 			break;
 		strchomp(data);
 		if (strcasecmp(name, RSS_TITLE) == 0)
-			cd->title = data;
+			cf->title = data;
 		else
 			free(data);
 		goto out;
 	case 2:
-		if (data == NULL || ca == NULL)
+		if (data == NULL || ci == NULL)
 			break;
 		strchomp(data);
 		if (strcasecmp(name, RSS_TITLE) == 0)
-			ca->title = data;
+			ci->title = data;
 		else if (strcasecmp(name, RSS_LINK) == 0)
-			ca->link = data;
+			ci->link = data;
 		else if (strcasecmp(name, RSS_DESCR) == 0)
-			ca->descr = data;
+			ci->descr = data;
 		else if (strcasecmp(name, RSS_AUTHOR) == 0)
-			ca->author = data;
+			ci->author = data;
 		else if (strcasecmp(name, RSS_ID) == 0)
-			ca->id = data;
+			ci->id = data;
 		else if (strcasecmp(name, RSS_DATE) == 0) {
-			ca->date = data;
-			ca->time = rfc822_date(data);
+			ci->date = data;
+			ci->time = rfc822_date(data);
 		} else if (strcasecmp(name, RSS_CATEGORY) == 0) {
 			struct category *cat;
 
 			if ((cat = malloc(sizeof(struct category))) == NULL)
 				err(1, "malloc");
 			cat->name = data;
-			SLIST_INSERT_HEAD(&ca->categories, cat, next);
+			SLIST_INSERT_HEAD(&ci->categories, cat, next);
 		} else
 			free(data);
 	}
@@ -173,9 +173,9 @@ start_elt(void *user_data, const char *name, const char **atts)
                 }
         }
 	if (supported) {
-		SLIST_INIT(&documents);
-		cd = NULL;
-		ca = NULL;
+		SLIST_INIT(&feeds);
+		cf = NULL;
+		ci = NULL;
 		depth = 0;
 		read_data = 0;
 		data = NULL;
@@ -183,8 +183,8 @@ start_elt(void *user_data, const char *name, const char **atts)
                 errx(1, "Unsupported feed");
 }
 
-struct document *
-parse_document(FILE *fin)
+struct feed *
+parse_feeds(FILE *fin)
 {
 	XML_Parser parser;
 	char buf[BUFSIZ];
@@ -206,5 +206,5 @@ parse_document(FILE *fin)
 			    XML_ErrorString(XML_GetErrorCode(parser)));
 	} while (!done);
 	XML_ParserFree(parser);
-	return SLIST_FIRST(&documents);
+	return SLIST_FIRST(&feeds);
 }

@@ -27,12 +27,12 @@
 
 void		 run_config(const char *);
 FILE		*request_url(char *);
-struct document	*parse_document(FILE *);
-void		 format_documents(struct document *);
-void		 output_html(struct document *, const char *);
-void		 output_text(struct document *, const char *);
+struct feed	*parse_feeds(FILE *);
+void		 format_feeds(struct feed *);
+void		 output_html(struct feed *, const char *);
+void		 output_text(struct feed *, const char *);
 
-void		(*output)(struct document *, const char *);
+void		(*output)(struct feed *, const char *);
 char		*output_args;
 struct tm	 param_time;
 
@@ -48,14 +48,14 @@ void
 run_url(char *url)
 {
 	FILE *fin;
-	struct document *docs;
+	struct feed *feeds;
 	
 	fin = request_url(url);
-	docs = parse_document(fin);
-	format_documents(docs);
+	feeds = parse_feeds(fin);
+	format_feeds(feeds);
 	fclose(fin);
 	if (output != NULL)
-		output(docs, output_args);
+		output(feeds, output_args);
 }
 
 int

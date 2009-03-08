@@ -63,10 +63,10 @@ static char *template_item;
 static void parse_template(const char *, int, void *);
 
 static void
-page_markers(const char *m, struct document *feeds)
+page_markers(const char *m, struct feed *feeds)
 {
-	SLIST_HEAD(, document) list;
-	struct document *feed;
+	SLIST_HEAD(, feed) list;
+	struct feed *feed;
 
 	if (strcmp(m, "PAGE_UPDATE") == 0) {
 	} else if (strcmp(m, "FEEDS") == 0) {
@@ -77,21 +77,21 @@ page_markers(const char *m, struct document *feeds)
 }
 
 static void
-feed_markers(const char *m, struct document *feed)
+feed_markers(const char *m, struct feed *feed)
 {
-	struct article *item;
+	struct item *item;
 
 	if (strcmp(m, "FEED_TITLE") == 0)
 		printf("%s", feed->title != NULL && *feed->title != '\0' ?
 		    feed->title : "(none)");
 	else if (strcmp(m, "ITEMS") == 0) {
-		SLIST_FOREACH(item, &feed->articles, next)
+		SLIST_FOREACH(item, &feed->items, next)
 			parse_template(template_item, TYPE_ITEM, item);
 	}
 }
 
 static void
-item_markers(const char *m, struct article *item)
+item_markers(const char *m, struct item *item)
 {
 	struct category *cat;
 	char buf[BUFSIZ];
@@ -136,13 +136,13 @@ parse_line(char *line, int type, void *data)
 			*b = '\0';
 			switch (type) {
 			case TYPE_PAGE:
-				page_markers(a, (struct document *)data);
+				page_markers(a, (struct feed *)data);
 				break;
 			case TYPE_FEED:
-				feed_markers(a, (struct document *)data);
+				feed_markers(a, (struct feed *)data);
 				break;
 			case TYPE_ITEM:
-				item_markers(a, (struct article *)data);
+				item_markers(a, (struct item *)data);
 			}
 		}
 	}
@@ -190,10 +190,10 @@ parse_template(const char *file, int type, void *data)
 }
 
 void
-output_html(struct document *docs, const char *args)
+output_html(struct feed *feeds, const char *args)
 {
 	template_page = template_feed = template_item = NULL;
 	if (*args != '\0') {
 	}
-	parse_template(template_page, TYPE_PAGE, docs);
+	parse_template(template_page, TYPE_PAGE, feeds);
 }

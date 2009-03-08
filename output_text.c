@@ -24,29 +24,29 @@
 #include "document.h"
 
 void
-output_text(struct document *docs, const char *args)
+output_text(struct feed *feeds, const char *args)
 {
-	SLIST_HEAD(, document) list;
-	struct document *d;
-	struct article *a;
+	SLIST_HEAD(, feed) list;
+	struct feed *feed;
+	struct item *item;
 	struct category *cat;
 	char buf[BUFSIZ];
 
-	SLIST_FIRST(&list) = docs;
-	SLIST_FOREACH(d, &list, next) {
-		SLIST_FOREACH(a, &d->articles, next) {
+	SLIST_FIRST(&list) = feeds;
+	SLIST_FOREACH(feed, &list, next) {
+		SLIST_FOREACH(item, &feed->items, next) {
 			printf("[%s] %s\n",
-			    d->title != NULL && *d->title != '\0' ?
-			    d->title : "(none)",
-			    a->title != NULL && *a->title != '\0' ?
-			    a->title : "(none)");
-			if (a->link != NULL && *a->link != '\0')
-				printf("Link: %s\n", a->link);
-			if (a->author != NULL && *a->author != '\0')
-				printf("Author: %s\n", a->author);
-			if (!SLIST_EMPTY(&a->categories)) {
+			    feed->title != NULL && *feed->title != '\0' ?
+			    feed->title : "(none)",
+			    item->title != NULL && *item->title != '\0' ?
+			    item->title : "(none)");
+			if (item->link != NULL && *item->link != '\0')
+				printf("Link: %s\n", item->link);
+			if (item->author != NULL && *item->author != '\0')
+				printf("Author: %s\n", item->author);
+			if (!SLIST_EMPTY(&item->categories)) {
 				printf("Category: ");
-				SLIST_FOREACH(cat, &a->categories, next) {
+				SLIST_FOREACH(cat, &item->categories, next) {
 					printf("%s", cat->name);
 					if (SLIST_NEXT(cat, next) != NULL)
 						printf(" / ");
@@ -54,14 +54,14 @@ output_text(struct document *docs, const char *args)
 						printf("\n");
 				}
 			}
-			if (a->time != (time_t)-1) {
+			if (item->time != (time_t)-1) {
 				strftime(buf, sizeof(buf), "%a, %d %b %Y %T GMT",
-				   localtime(&a->time)); 
+				   localtime(&item->time)); 
 				printf("Date: %s\n", buf);
-			} else if (a->date != NULL && *a->date != '\0')
-				printf("Date: %s (malformed)\n", a->date);
-			if (a->descr != NULL && *a->descr != '\0')
-				printf("\n%s\n", a->descr);
+			} else if (item->date != NULL && *item->date != '\0')
+				printf("Date: %s (malformed)\n", item->date);
+			if (item->descr != NULL && *item->descr != '\0')
+				printf("\n%s\n", item->descr);
 			printf("\n\n");
 		}
 	}

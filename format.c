@@ -79,43 +79,43 @@ format_text(const char *cmd, const char *text)
 }
 
 void
-format_documents(struct document *docs)
+format_feeds(struct feed *feeds)
 {
-	SLIST_HEAD(, document) list;
-	struct document *d;
-	struct article *a;
+	SLIST_HEAD(, feed) list;
+	struct feed *feed;
+	struct item *item;
 	char *cmd, *str;
 
 	if ((cmd = getenv("UNFEED_FORMAT")) == NULL)
 		return;
-	SLIST_FIRST(&list) = docs;
-	SLIST_FOREACH(d, &list, next) {
-		if (*cmd != '\0' &&  d->title != NULL
-		    && (str = format_text(cmd, d->title)) != NULL) {
+	SLIST_FIRST(&list) = feeds;
+	SLIST_FOREACH(feed, &list, next) {
+		if (*cmd != '\0' &&  feed->title != NULL
+		    && (str = format_text(cmd, feed->title)) != NULL) {
 			strchomp(str);
 			stroneline(str);
-			free(d->title);
-			d->title = str;
+			free(feed->title);
+			feed->title = str;
 		}
-		SLIST_FOREACH(a, &d->articles, next) {
-			if (*cmd != '\0' &&  a->title != NULL
-			    && (str = format_text(cmd, a->title)) != NULL) {
+		SLIST_FOREACH(item, &feed->items, next) {
+			if (*cmd != '\0' &&  item->title != NULL
+			    && (str = format_text(cmd, item->title)) != NULL) {
 				strchomp(str);
 				stroneline(str);
-				free(a->title);
-				a->title = str;
+				free(item->title);
+				item->title = str;
 			}
-			if (*cmd != '\0' && a->descr != NULL
-			    && (str = format_text(cmd, a->descr)) != NULL) {
-				free(a->descr);
-				a->descr = str;
+			if (*cmd != '\0' && item->descr != NULL
+			    && (str = format_text(cmd, item->descr)) != NULL) {
+				free(item->descr);
+				item->descr = str;
 			}
-			if (*cmd != '\0' &&  a->author != NULL
-			    && (str = format_text(cmd, a->author)) != NULL) {
+			if (*cmd != '\0' &&  item->author != NULL
+			    && (str = format_text(cmd, item->author)) != NULL) {
 				strchomp(str);
 				stroneline(str);
-				free(a->author);
-				a->author = str;
+				free(item->author);
+				item->author = str;
 			}
 		}
 	}
