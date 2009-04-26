@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2008 Colin Didier <cdidier@cybione.org>
+ * Copyright (c) 2008,2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -193,7 +193,8 @@ void
 output_html(struct feed *feeds, const char *args)
 {
 	template_page = template_feed = template_item = NULL;
-	if (*args != '\0') {
+	if (args != NULL && *args != '\0') {
+		/* TODO custom templates */
 	}
 	parse_template(template_page, TYPE_PAGE, feeds);
 }
