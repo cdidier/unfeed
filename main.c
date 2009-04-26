@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2008 Colin Didier <cdidier@cybione.org>
+ * Copyright (c) 2008,2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -50,7 +50,7 @@ run_url(char *url)
 	FILE *fin;
 	struct feed *feeds;
 	
-	fin = request_url(url);
+	fin = strcmp(url, "-") == 0 ? stdin : request_url(url);
 	feeds = parse_feeds(fin);
 	format_feeds(feeds);
 	fclose(fin);
