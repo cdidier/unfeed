@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2008 Colin Didier <cdidier@cybione.org>
+ * Copyright (c) 2008,2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -85,7 +85,25 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 		    || (strcasecmp(name, RSS_CATEGORY) == 0))
 			read_data = 1;
 		else if (strcasecmp(name, RSS_ENCLOSURE) == 0) {
-			/* TODO parse atts */
+			struct enclosure *e;
+			int i;
+
+			if ((e = malloc(sizeof(struct enclosure))) == NULL)
+				err(1, "malloc");
+			INIT_ENCLOSURE(e);
+			SLIST_INSERT_HEAD(&ci->enclosures, e, next);
+			for (i = 0; atts[i] != NULL; i += 2) {
+				if (strcmp(atts[i], "url") == 0) {
+					if ((e->url = strdup(atts[i+1])) == NULL)
+						err(1, "strdup");
+				} else if (strcmp(atts[i], "length") == 0) {
+					if ((e->size = strdup(atts[i+1])) == NULL)
+						err(1, "strdup");
+				} else if (strcmp(atts[i], "type") == 0) {
+					if ((e->type = strdup(atts[i+1])) == NULL)
+						err(1, "strdup");
+				}
+			}
 		}
 		break;
 	}

@@ -50,4 +50,8 @@ struct enclosure {
 	SLIST_ENTRY(enclosure)	next;
 };
 
+#define INIT_ENCLOSURE(_e) do {						\
+		(_e)->url = (_e)->size = (_e)->type = NULL;		\
+	} while(0)
+
 #endif
