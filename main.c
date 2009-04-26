@@ -30,6 +30,7 @@ FILE		*request_url(char *);
 struct feed	*parse_feeds(FILE *);
 void		 format_feeds(struct feed *);
 void		 output_html(struct feed *, const char *);
+void		 output_mail(struct feed *, const char *);
 void		 output_text(struct feed *, const char *);
 
 void		(*output)(struct feed *, const char *);
@@ -75,12 +76,15 @@ main(int argc, char *argv[])
 			if (strncmp(optarg, "html", 4) == 0) {
 				output = output_html;
 				output_args = optarg+4;
+			} if (strncmp(optarg, "mail", 4) == 0) {
+				output = output_mail;
+				output_args = optarg+4;
 			} else if (strncmp(optarg, "text", 4) == 0)
 				output = output_text;
 			else if (strncmp(optarg, "null", 4) == 0)
 				output = NULL;
 			else
-				errx(1, "Unknown output");
+				errx(1, "Unknown output module");
 			break;
 		case 't':
 			t = strptime(optarg, "%Y%m%d%H%M", &param_time);
