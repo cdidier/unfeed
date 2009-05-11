@@ -30,6 +30,7 @@
 #define HTTP_URL	"http://"
 #define HTTP_PORT	"80"
 #define HTTP_USER_AGENT	"User-Agent: unfeed"
+#define HTTP_LOCATION	"Location: "
 
 #define EMPTYSTRING(s)	((s) == NULL || (*(s) == '\0'))
 
@@ -115,6 +116,10 @@ again:
 	while (*buf != '\r' && *buf != '\0'
 	    && fgets(buf, sizeof(buf), fin) != NULL) {
 		buf[strcspn(buf, "\n")] = '\0';
+		if (strncmp(buf, HTTP_LOCATION, sizeof(HTTP_LOCATION)-1) == 0) {
+			fclose(fin);
+			return request_url(buf+sizeof(HTTP_LOCATION)-1);
+		}
 		/* TODO parse other lines */
 	}
 
