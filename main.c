@@ -28,6 +28,7 @@
 void		 run_config(const char *);
 FILE		*request_url(char *);
 struct feed	*parse_feeds(FILE *);
+void		 filter_feeds(struct feed *, struct tm *tm);
 void		 format_feeds(struct feed *);
 void		 output_html(struct feed *, const char *);
 void		 output_mail(struct feed *, const char *);
@@ -40,8 +41,8 @@ struct tm	 param_time;
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unfeed [-t time] [-o output_module:module_args] -f file\n"
-			"       unfeed [-t time] [-o output_module:module_args] url\n");
+	fprintf(stderr, "usage: unfeed [-t time] [-o output[:args]] -f file\n"
+			"       unfeed [-t time] [-o output[:args]] url\n");
 	exit(1);
 }
 
@@ -53,6 +54,7 @@ run_url(char *url)
 	
 	fin = strcmp(url, "-") == 0 ? stdin : request_url(url);
 	feeds = parse_feeds(fin);
+	filter_feeds(feeds, &param_time);
 	format_feeds(feeds);
 	fclose(fin);
 	if (output != NULL)
@@ -76,7 +78,7 @@ main(int argc, char *argv[])
 			if (strncmp(optarg, "html", 4) == 0) {
 				output = output_html;
 				output_args = optarg+4;
-			} if (strncmp(optarg, "mail", 4) == 0) {
+			} else if (strncmp(optarg, "mail", 4) == 0) {
 				output = output_mail;
 				output_args = optarg+4;
 			} else if (strncmp(optarg, "text", 4) == 0)

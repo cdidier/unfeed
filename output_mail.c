@@ -129,6 +129,8 @@ output_mail(struct feed *feeds, const char *args)
 	}
 	SLIST_FIRST(&list) = feeds;
 	SLIST_FOREACH(feed, &list, next)
-		SLIST_FOREACH(item, &feed->items, next)
-			send_mail(cmd, mail, feed, item);
+		SLIST_FOREACH(item, &feed->items, next) {
+			if (!(item->flags & ITEM_OLD))
+				send_mail(cmd, mail, feed, item);
+		}
 }

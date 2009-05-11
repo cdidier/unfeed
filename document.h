@@ -27,6 +27,7 @@ struct item {
 	time_t	 time;
 	SLIST_HEAD(, category)	categories;
 	SLIST_HEAD(, enclosure)	enclosures;
+	int			flags;
 	SLIST_ENTRY(item)	next;
 };
 
@@ -36,7 +37,12 @@ struct item {
 		(_a)->time = (time_t)-1;				\
 		SLIST_INIT(&(_a)->categories);				\
 		SLIST_INIT(&(_a)->enclosures);				\
+		(_a)->flags = 0;					\
 	} while(0)
+
+enum ITEM_FLAGS {
+	ITEM_OLD	= 0x0001,
+};
 
 struct category {
 	char	*name;

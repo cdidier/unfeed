@@ -50,7 +50,7 @@ static char *ITEM_TEMPLATE =
     "    <br>\n"
     "    %%ITEM_DESCR%%<br>\n";
 
-enum {
+enum PAGE_TYPE {
 	TYPE_PAGE,
 	TYPE_FEED,
 	TYPE_ITEM
@@ -67,12 +67,19 @@ page_markers(const char *m, struct feed *feeds)
 {
 	SLIST_HEAD(, feed) list;
 	struct feed *feed;
+	struct item *item;
+	int empty;
 
 	if (strcmp(m, "PAGE_UPDATE") == 0) {
 	} else if (strcmp(m, "FEEDS") == 0) {
 		SLIST_FIRST(&list) = feeds;
-		SLIST_FOREACH(feed, &list, next)
-			parse_template(template_feed, TYPE_FEED, feed);
+		SLIST_FOREACH(feed, &list, next) {
+			for (item = SLIST_FIRST(&feed->items), empty = 1;
+			    empty && item != NULL; item = SLIST_NEXT(item, next))
+				empty = item->flags & ITEM_OLD;
+			if (!empty)
+				parse_template(template_feed, TYPE_FEED, feed);
+		}
 	}
 }
 
@@ -85,8 +92,10 @@ feed_markers(const char *m, struct feed *feed)
 		printf("%s", feed->title != NULL && *feed->title != '\0' ?
 		    feed->title : "(none)");
 	else if (strcmp(m, "ITEMS") == 0) {
-		SLIST_FOREACH(item, &feed->items, next)
-			parse_template(template_item, TYPE_ITEM, item);
+		SLIST_FOREACH(item, &feed->items, next) {
+			if (!(item->flags & ITEM_OLD))
+				parse_template(template_item, TYPE_ITEM, item);
+		}
 	}
 }
 
