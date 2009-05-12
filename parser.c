@@ -193,14 +193,34 @@ atom_start_elt(void *user_data, const char *name, const char **atts)
 		if (ci == NULL)
 			break;
 		if ((ci->title == NULL && strcasecmp(name, ATOM_TITLE) == 0)
-		    || (ci->link == NULL && strcasecmp(name, ATOM_LINK) == 0)
 		    || (ci->descr == NULL && strcasecmp(name, ATOM_CONTENT) == 0)
 		    || (ci->id == NULL && strcasecmp(name, ATOM_ID) == 0)
-		    || (ci->author == NULL && strcasecmp(name, ATOM_AUTHOR) == 0)
 		    || (ci->date == NULL && strcasecmp(name, ATOM_UPDATED) == 0))
 			read_data = 1;
+		else if (ci->link == NULL && strcasecmp(name, ATOM_LINK) == 0) {
+			int i;
+			char *s;
+
+			for (i = 0; atts[i] != NULL; i += 2) {
+				if (strcasecmp(atts[i], "rel") == 0
+				    && strcmp(atts[i+1], "alternate") != 0)
+					break;
+				if (strcasecmp(atts[i], "type") == 0
+				    && strcasecmp(atts[i+1], "text/html") != 0)
+					break;
+				if (strcasecmp(atts[i], "href") == 0)
+					s = atts[i+1];
+			}
+			if ((ci->link = strdup(s)) == NULL)
+				err(1, "strdup");
+			strchomp(ci->link);
+		}
 		break;
 	case 2:
+		if (ci == NULL)
+			break;
+		if (ci->author == NULL && strcasecmp(name, ATOM_NAME) == 0)
+			read_data = 1;
 		break;
 	}
 }
@@ -228,12 +248,8 @@ atom_end_elt(void *user_data, const char *name)
 		strchomp(data);
 		if (strcasecmp(name, ATOM_TITLE) == 0)
 			ci->title = data;
-		else if (strcasecmp(name, ATOM_LINK) == 0)
-			ci->link = data;
 		else if (strcasecmp(name, ATOM_CONTENT) == 0)
 			ci->descr = data;
-		else if (strcasecmp(name, ATOM_AUTHOR) == 0)
-			ci->author = data;
 		else if (strcasecmp(name, ATOM_ID) == 0)
 			ci->id = data;
 		else if (strcasecmp(name, ATOM_UPDATED) == 0) {
@@ -243,6 +259,13 @@ atom_end_elt(void *user_data, const char *name)
 			free(data);
 		goto out;
 	case 2:
+		if (data == NULL || ci == NULL)
+			break;
+		strchomp(data);
+		if (strcasecmp(name, ATOM_NAME) == 0)
+			ci->author = data;
+		else
+			free(data);
 	}
 out:	read_data = 0;
 	data = NULL;
@@ -288,18 +311,18 @@ start_elt(void *user_data, const char *name, const char **atts)
 	XML_Parser parser = (XML_Parser)user_data;
 	int i, supported;
 
-	supported = 0;
 	cf = NULL;
 	ci = NULL;
 	depth = 0;
 	read_data = 0;
 	data = NULL;
 	SLIST_INIT(&feeds);
+	supported = 0;
 	if (strcasecmp(name, RSS) == 0) {
 		supported = 1;
 		XML_SetElementHandler(parser, rss_start_elt, rss_end_elt);
 	} else if (strcasecmp(name, ATOM_FEED) == 0) {
-		for (i = 0, supported = 0 ; atts[i] && !supported; i += 2)
+		for (i = 0; atts[i] != NULL && !supported; i += 2)
 			if (strcasecmp(atts[i], "xmlns") == 0
 			    && strcmp(atts[i+1], ATOM_XMLNS) == 0) {
 				supported = 1;
