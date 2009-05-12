@@ -185,6 +185,5 @@ rfc3339_date(char *date)
 		p += 3;
 	tm.tm_isdst = -1;
 	tm.tm_gmtoff = offset = *p != '\0' ? parse_timezone_rfc3339(p) : 0;
-	warnx("%ld", offset);
 	return mktime(&tm) - offset;
 }
