@@ -29,10 +29,12 @@
 
 void	strchomp(char *);
 int	insert_text(char **, const char *, size_t);
-time_t	rfc822_date(const char *);
+time_t	rfc822_date(char *);
+time_t	rfc3339_date(char *);
 
-#define RSS_DOC		"channel"
-#define RSS_ARTICLE	"item"
+#define RSS		"rss"
+#define RSS_CHANNEL	"channel"
+#define RSS_ITEM	"item"
 #define RSS_TITLE	"title"
 #define RSS_LINK	"link"
 #define RSS_DESCR	"description"
@@ -41,6 +43,19 @@ time_t	rfc822_date(const char *);
 #define RSS_DATE	"pubDate"
 #define RSS_CATEGORY	"category"
 #define RSS_ENCLOSURE	"enclosure"
+
+#define ATOM_XMLNS	"http://www.w3.org/2005/Atom"
+#define ATOM_FEED	"feed"
+#define ATOM_ENTRY	"entry"
+#define ATOM_TITLE	RSS_TITLE
+#define ATOM_CONTENT	"content"
+#define ATOM_LINK	RSS_LINK
+#define ATOM_AUTHOR	RSS_AUTHOR
+#define ATOM_NAME	"name"
+#define ATOM_ID		"id"
+#define ATOM_UPDATED	"updated"
+
+#define RDF		"rdf:RDF"
 
 static SLIST_HEAD(, feed) feeds;
 static struct feed	*cf; /* current feed */
@@ -54,7 +69,7 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 {
 	switch (depth++) {
 	case 0:
-		if (strcasecmp(name, RSS_DOC) == 0) {
+		if (strcasecmp(name, RSS_CHANNEL) == 0) {
 			if ((cf = malloc(sizeof(struct feed))) == NULL)
 				err(1, "malloc");
 			INIT_FEED(cf);
@@ -66,7 +81,7 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 			break;
 		if (strcasecmp(name, RSS_TITLE) == 0)
 			read_data = 1;
-		else if (strcasecmp(name, RSS_ARTICLE) == 0) {
+		else if (strcasecmp(name, RSS_ITEM) == 0) {
 			if ((ci = malloc(sizeof(struct item))) == NULL)
 				err(1, "malloc");
 			INIT_ITEM(ci);
@@ -105,16 +120,7 @@ rss_start_elt(void *user_data, const char *name, const char **atts)
 				}
 			}
 		}
-		break;
 	}
-}
-
-static void XMLCALL
-rss_data_handler(void *user_data, const XML_Char *s, int len)
-{
-	if (read_data != 0)
-		if (insert_text(&data, s, (size_t)len) == -1)
-			err(1, "insert_text");
 }
 
 static void XMLCALL
@@ -122,11 +128,11 @@ rss_end_elt(void *user_data, const char *name)
 {
 	switch (--depth) {
 	case 0:
-		if (strcasecmp(name, RSS_DOC) == 0)
+		if (strcasecmp(name, RSS_CHANNEL) == 0)
 			cf = NULL;
 		break;
 	case 1:
-		if (strcasecmp(name, RSS_ARTICLE) == 0) {
+		if (strcasecmp(name, RSS_ITEM) == 0) {
 			ci = NULL;
 			break;
 		}
@@ -170,35 +176,148 @@ out:	read_data = 0;
 }
 
 static void XMLCALL
+atom_start_elt(void *user_data, const char *name, const char **atts)
+{
+	switch (depth++) {
+	case 0:
+		if (strcasecmp(name, ATOM_TITLE) == 0)
+			read_data = 1;
+		else if (strcasecmp(name, ATOM_ENTRY) == 0) {
+			if ((ci = malloc(sizeof(struct item))) == NULL)
+				err(1, "malloc");
+			INIT_ITEM(ci);
+			SLIST_INSERT_HEAD(&cf->items, ci, next);
+		}
+		break;
+	case 1:
+		if (ci == NULL)
+			break;
+		if ((ci->title == NULL && strcasecmp(name, ATOM_TITLE) == 0)
+		    || (ci->link == NULL && strcasecmp(name, ATOM_LINK) == 0)
+		    || (ci->descr == NULL && strcasecmp(name, ATOM_CONTENT) == 0)
+		    || (ci->id == NULL && strcasecmp(name, ATOM_ID) == 0)
+		    || (ci->author == NULL && strcasecmp(name, ATOM_AUTHOR) == 0)
+		    || (ci->date == NULL && strcasecmp(name, ATOM_UPDATED) == 0))
+			read_data = 1;
+		break;
+	case 2:
+		break;
+	}
+}
+
+static void XMLCALL
+atom_end_elt(void *user_data, const char *name)
+{
+	switch (--depth) {
+	case 0:
+		if (strcasecmp(name, ATOM_ENTRY) == 0) {
+			ci = NULL;
+			break;
+		}
+		if (data == NULL || cf == NULL)
+			break;
+		strchomp(data);
+		if (strcasecmp(name, ATOM_TITLE) == 0)
+			cf->title = data;
+		else
+			free(data);
+		goto out;
+	case 1:
+		if (data == NULL || ci == NULL)
+			break;
+		strchomp(data);
+		if (strcasecmp(name, ATOM_TITLE) == 0)
+			ci->title = data;
+		else if (strcasecmp(name, ATOM_LINK) == 0)
+			ci->link = data;
+		else if (strcasecmp(name, ATOM_CONTENT) == 0)
+			ci->descr = data;
+		else if (strcasecmp(name, ATOM_AUTHOR) == 0)
+			ci->author = data;
+		else if (strcasecmp(name, ATOM_ID) == 0)
+			ci->id = data;
+		else if (strcasecmp(name, ATOM_UPDATED) == 0) {
+			ci->date = data;
+			ci->time = rfc3339_date(data);
+		} else
+			free(data);
+		goto out;
+	case 2:
+	}
+out:	read_data = 0;
+	data = NULL;
+}
+
+static void XMLCALL
+rdf_start_elt(void *user_data, const char *name, const char **atts)
+{
+	switch (depth++) {
+	case 0:
+		break;
+	case 1:
+		break;
+	case 2:
+		break;
+	}
+}
+
+static void XMLCALL
+rdf_end_elt(void *user_data, const char *name)
+{
+	switch (--depth) {
+	case 0:
+		break;
+	case 1:
+		break;
+	case 2:
+		break;
+	}
+}
+
+static void XMLCALL
+data_handler(void *user_data, const XML_Char *s, int len)
+{
+	if (read_data != 0)
+		if (insert_text(&data, s, (size_t)len) == -1)
+			err(1, "insert_text");
+}
+
+static void XMLCALL
 start_elt(void *user_data, const char *name, const char **atts)
 {
 	XML_Parser parser = (XML_Parser)user_data;
 	int i, supported;
 
 	supported = 0;
-        if (strcasecmp(name, "rss") == 0) {
-                supported = 1;
+	cf = NULL;
+	ci = NULL;
+	depth = 0;
+	read_data = 0;
+	data = NULL;
+	SLIST_INIT(&feeds);
+	if (strcasecmp(name, RSS) == 0) {
+		supported = 1;
 		XML_SetElementHandler(parser, rss_start_elt, rss_end_elt);
-                XML_SetCharacterDataHandler(parser, rss_data_handler);
-        } else if (strcasecmp(name, "feed") == 0) {
-                for (i = 0; atts[i] && !supported; i += 2)
-                        if (strcasecmp(atts[i], "xmlns") == 0
-                            && strcmp(atts[i+1],
-                            "http://www.w3.org/2005/Atom") == 0)
-                                supported = 1;
-                if (supported) {
-                        errx(1, "Atom feeds not yet supported");
-                }
-        }
-	if (supported) {
-		SLIST_INIT(&feeds);
-		cf = NULL;
-		ci = NULL;
-		depth = 0;
-		read_data = 0;
-		data = NULL;
-        } else
-                errx(1, "Unsupported feed");
+	} else if (strcasecmp(name, ATOM_FEED) == 0) {
+		for (i = 0, supported = 0 ; atts[i] && !supported; i += 2)
+			if (strcasecmp(atts[i], "xmlns") == 0
+			    && strcmp(atts[i+1], ATOM_XMLNS) == 0) {
+				supported = 1;
+				XML_SetElementHandler(parser, atom_start_elt,
+				    atom_end_elt);
+				if ((cf = malloc(sizeof(struct feed))) == NULL)
+					err(1, "malloc");
+				INIT_FEED(cf);
+				SLIST_INSERT_HEAD(&feeds, cf, next);
+			}
+	} else if (strcasecmp(name, RDF) == 0) {
+		supported = 1;
+		XML_SetElementHandler(parser, rdf_start_elt, rdf_end_elt);
+		errx(1, "RDF feeds not yed supported");
+	}
+	if (!supported)
+		errx(1, "Unsupported feed");
+	XML_SetCharacterDataHandler(parser, data_handler);
 }
 
 struct feed *

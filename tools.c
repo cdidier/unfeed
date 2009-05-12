@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2008 Colin Didier <cdidier@cybione.org>
+ * Copyright (c) 2008,2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -90,7 +90,7 @@ insert_text(char **s, const char *text, size_t len)
 
 
 static long
-parse_timezone(const char *tz)
+parse_timezone_rfc822(const char *tz)
 {
 	const char *rfc822_timezones[26][4] = {
 		{ "M", NULL },			/* UTC-12 */
@@ -153,6 +153,38 @@ rfc822_date(char *date)
 		return (time_t)-1;
 	strchomp(p);
 	tm.tm_isdst = -1;
-	tm.tm_gmtoff = offset = *p != '\0' ? parse_timezone(p) : 0;
+	tm.tm_gmtoff = offset = *p != '\0' ? parse_timezone_rfc822(p) : 0;
+	return mktime(&tm) - offset;
+}
+
+static long
+parse_timezone_rfc3339(const char *tz)
+{
+	struct tm tm;
+
+	if ((*tz == '+' || *tz == '-') && strlen(tz) == 6) {
+		if (strptime(tz+1, "%H:%M",  &tm) == 0)
+			return 0;
+		return (*tz == '+' ? 1 : -1) * (tm.tm_hour*60+tm.tm_min)*60;
+	}
+	return 0;
+}
+
+time_t
+rfc3339_date(char *date)
+{
+	struct tm tm;
+	long offset;
+	char *p;
+
+	memset(&tm, 0, sizeof(struct tm));
+	strchomp(date);
+	if ((p = strptime(date, "%Y-%m-%dT%H:%M:%S", &tm)) == NULL)
+		return (time_t)-1;
+	if (*p == '.' && strlen(p) >= 3) /* ignore fractional secondi */
+		p += 3;
+	tm.tm_isdst = -1;
+	tm.tm_gmtoff = offset = *p != '\0' ? parse_timezone_rfc3339(p) : 0;
+	warnx("%ld", offset);
 	return mktime(&tm) - offset;
 }
