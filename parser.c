@@ -65,6 +65,7 @@ time_t	rfc3339_date(char *);
 #define RDF_DATE	"dc:date"
 #define RDF_CREATOR	"dc:creator"
 #define RDF_DESCR	"description"
+#define RDF_SUBJECT	"dc:subject"
 
 static SLIST_HEAD(, feed) feeds;
 static struct feed	*cf; /* current feed */
@@ -329,7 +330,8 @@ rdf_start_elt(void *user_data, const char *name, const char **atts)
 		    || (ci->link == NULL && strcasecmp(name, RSS_LINK) == 0)
 		    || (ci->descr == NULL && strcasecmp(name, RDF_DESCR) == 0)
 		    || (ci->author == NULL && strcasecmp(name, RDF_CREATOR) == 0)
-		    || (ci->date == NULL && strcasecmp(name, RDF_DATE) == 0))
+		    || (ci->date == NULL && strcasecmp(name, RDF_DATE) == 0)
+		    || strcasecmp(name, RDF_SUBJECT) == 0)
 			read_data = 1;
 		break;
 	case 3:
@@ -385,6 +387,13 @@ rdf_end_elt(void *user_data, const char *name)
 			else if (strcasecmp(name, RDF_DATE) == 0) {
 				ci->date = data;
 				ci->time = rfc3339_date(data);
+			} else if (strcasecmp(name, RDF_SUBJECT) == 0) {
+				struct category *cat;
+
+				if ((cat = malloc(sizeof(struct category))) == NULL)
+					err(1, "malloc");
+				cat->name = data;
+				SLIST_INSERT_HEAD(&ci->categories, cat, next);
 			} else
 				free(data);
 		} else
