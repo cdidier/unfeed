@@ -50,12 +50,21 @@ time_t	rfc3339_date(char *);
 #define ATOM_TITLE	RSS_TITLE
 #define ATOM_CONTENT	"content"
 #define ATOM_LINK	RSS_LINK
-#define ATOM_AUTHOR	RSS_AUTHOR
 #define ATOM_NAME	"name"
 #define ATOM_ID		"id"
 #define ATOM_UPDATED	"updated"
 
 #define RDF		"rdf:RDF"
+#define RDF_CHANNEL	RSS_CHANNEL
+#define RDF_TITLE	RSS_TITLE
+#define RDF_LIST_ITEM	"rdf:li"
+#define RDF_LIST_ID	"rdf:resource"
+#define RDF_ITEM	RSS_ITEM
+#define RDF_ID		"rdf:about"
+#define RDF_LINK	RSS_LINK
+#define RDF_DATE	"dc:date"
+#define RDF_CREATOR	"dc:creator"
+#define RDF_DESCR	"description"
 
 static SLIST_HEAD(, feed) feeds;
 static struct feed	*cf; /* current feed */
@@ -143,7 +152,7 @@ rss_end_elt(void *user_data, const char *name)
 			cf->title = data;
 		else
 			free(data);
-		goto out;
+		break;
 	case 2:
 		if (data == NULL || ci == NULL)
 			break;
@@ -171,7 +180,7 @@ rss_end_elt(void *user_data, const char *name)
 		} else
 			free(data);
 	}
-out:	read_data = 0;
+	read_data = 0;
 	data = NULL;
 }
 
@@ -199,8 +208,9 @@ atom_start_elt(void *user_data, const char *name, const char **atts)
 			read_data = 1;
 		else if (ci->link == NULL && strcasecmp(name, ATOM_LINK) == 0) {
 			int i;
-			char *s;
+			const char *s;
 
+			s = NULL;
 			for (i = 0; atts[i] != NULL; i += 2) {
 				if (strcasecmp(atts[i], "rel") == 0
 				    && strcmp(atts[i+1], "alternate") != 0)
@@ -211,6 +221,8 @@ atom_start_elt(void *user_data, const char *name, const char **atts)
 				if (strcasecmp(atts[i], "href") == 0)
 					s = atts[i+1];
 			}
+			if (s == NULL)
+				break;
 			if ((ci->link = strdup(s)) == NULL)
 				err(1, "strdup");
 			strchomp(ci->link);
@@ -241,7 +253,7 @@ atom_end_elt(void *user_data, const char *name)
 			cf->title = data;
 		else
 			free(data);
-		goto out;
+		break;
 	case 1:
 		if (data == NULL || ci == NULL)
 			break;
@@ -257,7 +269,7 @@ atom_end_elt(void *user_data, const char *name)
 			ci->time = rfc3339_date(data);
 		} else
 			free(data);
-		goto out;
+		break;
 	case 2:
 		if (data == NULL || ci == NULL)
 			break;
@@ -267,8 +279,21 @@ atom_end_elt(void *user_data, const char *name)
 		else
 			free(data);
 	}
-out:	read_data = 0;
+	read_data = 0;
 	data = NULL;
+}
+
+static struct item *
+find_item(const char *id)
+{
+	struct feed *f;
+	struct item *i;
+
+	SLIST_FOREACH(f, &feeds, next)
+		SLIST_FOREACH(i, &f->items, next)
+			if (strcmp(i->id, id) == 0)
+				return i;
+	return NULL;
 }
 
 static void XMLCALL
@@ -276,11 +301,56 @@ rdf_start_elt(void *user_data, const char *name, const char **atts)
 {
 	switch (depth++) {
 	case 0:
+		if (strcasecmp(name, RDF_CHANNEL) == 0) {
+			if ((cf = malloc(sizeof(struct feed))) == NULL)
+				err(1, "malloc");
+			INIT_FEED(cf);
+			SLIST_INSERT_HEAD(&feeds, cf, next);
+		}
+		if (strcasecmp(name, RDF_ITEM) == 0) {
+			int i;
+			const char *s;
+			
+			for (i = 0; atts[i] != NULL; i += 2)
+				if (strcasecmp(atts[i], RDF_ID) == 0)
+					s = atts[i+1];
+			if (s == NULL || (ci = find_item(s)) == NULL)
+				break;
+		}
 		break;
 	case 1:
+		if (cf != NULL) {
+			if (strcasecmp(name, RDF_TITLE) == 0)
+				read_data = 1;
+		}
+		if (ci == NULL)
+			break;
+		if ((ci->title == NULL && strcasecmp(name, RDF_TITLE) == 0)
+		    || (ci->link == NULL && strcasecmp(name, RSS_LINK) == 0)
+		    || (ci->descr == NULL && strcasecmp(name, RDF_DESCR) == 0)
+		    || (ci->author == NULL && strcasecmp(name, RDF_CREATOR) == 0)
+		    || (ci->date == NULL && strcasecmp(name, RDF_DATE) == 0))
+			read_data = 1;
 		break;
-	case 2:
-		break;
+	case 3:
+		if (cf == NULL)
+			break;
+		if (strcasecmp(name, RDF_LIST_ITEM) == 0) {
+			int i;
+			const char *s;
+
+			for (i = 0; atts[i] != NULL; i += 2)
+				if (strcasecmp(atts[i], RDF_LIST_ID) == 0)
+					s = atts[i+1];
+			if (s == NULL)
+				break;
+			if ((ci = malloc(sizeof(struct item))) == NULL)
+				err(1, "malloc");
+			if ((ci->id = strdup(s)) == NULL)
+				err(1, "strdup");
+			SLIST_INSERT_HEAD(&cf->items, ci, next);
+			ci = NULL;
+		}
 	}
 }
 
@@ -289,12 +359,40 @@ rdf_end_elt(void *user_data, const char *name)
 {
 	switch (--depth) {
 	case 0:
+		if (strcasecmp(name, RSS_CHANNEL) == 0)
+			cf = NULL;
+		if (strcasecmp(name, RDF_ITEM) == 0)
+			ci = NULL;
 		break;
 	case 1:
-		break;
-	case 2:
+		if (data == NULL)
+			break;
+		strchomp(data);
+		if (cf != NULL) {
+			if (strcasecmp(name, RDF_TITLE) == 0)
+				cf->title = data;
+			else
+				free(data);
+		} else if (ci != NULL) {
+			if (strcasecmp(name, RDF_TITLE) == 0)
+				ci->title = data;
+			else if (strcasecmp(name, RDF_LINK) == 0)
+				ci->link = data;
+			else if (strcasecmp(name, RDF_DESCR) == 0)
+				ci->descr = data;
+			else if (strcasecmp(name, RDF_CREATOR) == 0)
+				ci->author = data;
+			else if (strcasecmp(name, RDF_DATE) == 0) {
+				ci->date = data;
+				ci->time = rfc3339_date(data);
+			} else
+				free(data);
+		} else
+			free(data);
 		break;
 	}
+	read_data = 0;
+	data = NULL;
 }
 
 static void XMLCALL
@@ -336,7 +434,6 @@ start_elt(void *user_data, const char *name, const char **atts)
 	} else if (strcasecmp(name, RDF) == 0) {
 		supported = 1;
 		XML_SetElementHandler(parser, rdf_start_elt, rdf_end_elt);
-		errx(1, "RDF feeds not yed supported");
 	}
 	if (!supported)
 		errx(1, "Unsupported feed");
