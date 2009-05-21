@@ -55,6 +55,7 @@ format_mail(const char *mail, struct feed *feed, struct item *item, int fd)
 		fprintf(fout, "Date: %s\n", buf);
 	} else if (item->date != NULL && *item->date != '\0')
 		printf("Date: %s\n", item->date);
+	fprintf(fout, "\n");
 	if (item->link != NULL && *item->link != '\0')
 		fprintf(fout, "Link: %s\n", item->link);
 	if (item->author != NULL && *item->author != '\0')
