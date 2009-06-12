@@ -1,6 +1,6 @@
 BIN= unfeed
 
-CFLAGS=-g -Wall -W -Wpointer-arith -Wbad-function-cast
+CFLAGS=-g -Wall -W -Wpointer-arith -Wbad-function-cast -Wno-unused-parameter
 LDFLAGS=-lexpat
 
 SRCS= config.c fetch.c filter.c format.c main.c parser.c tools.c \
