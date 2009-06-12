@@ -30,6 +30,7 @@ FILE		*request_url(char *);
 struct feed	*parse_feeds(FILE *);
 void		 filter_feeds(struct feed *, struct tm *tm);
 void		 format_feeds(struct feed *);
+void		 output_cmd(struct feed *, const char *);
 void		 output_html(struct feed *, const char *);
 void		 output_mail(struct feed *, const char *);
 void		 output_text(struct feed *, const char *);
@@ -75,7 +76,10 @@ main(int argc, char *argv[])
 			config_file = optarg;
 			break;
 		case 'o':
-			if (strncmp(optarg, "html", 4) == 0) {
+			if (strncmp(optarg, "cmd", 3) == 0) {
+				output = output_cmd;
+				output_args = optarg+3;
+			} else if (strncmp(optarg, "html", 4) == 0) {
 				output = output_html;
 				output_args = optarg+4;
 			} else if (strncmp(optarg, "mail", 4) == 0) {
