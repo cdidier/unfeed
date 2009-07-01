@@ -30,20 +30,19 @@ FILE		*request_url(char *);
 struct feed	*parse_feeds(FILE *);
 void		 filter_feeds(struct feed *, struct tm *tm);
 void		 format_feeds(struct feed *);
-void		 output_cmd(struct feed *, const char *);
-void		 output_html(struct feed *, const char *);
-void		 output_mail(struct feed *, const char *);
-void		 output_text(struct feed *, const char *);
+void		 output_cmd(struct feed *);
+void		 output_html(struct feed *);
+void		 output_mail(struct feed *);
+void		 output_text(struct feed *);
 
-void		(*output)(struct feed *, const char *);
-char		*output_args;
+void		(*output)(struct feed *);
 struct tm	 param_time;
 
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unfeed [-t time] [-o output[:args]] -f file\n"
-			"       unfeed [-t time] [-o output[:args]] url\n");
+	fprintf(stderr, "usage: unfeed [-t time] [-o output] -f file\n"
+			"       unfeed [-t time] [-o output] url\n");
 	exit(1);
 }
 
@@ -59,7 +58,7 @@ run_url(char *url)
 	format_feeds(feeds);
 	fclose(fin);
 	if (output != NULL)
-		output(feeds, output_args);
+		output(feeds);
 }
 
 int
@@ -68,7 +67,7 @@ main(int argc, char *argv[])
 	char ch, *config_file, *t;
 
 	output = output_text;
-	output_args = config_file = NULL;
+	config_file = NULL;
 	memset(&param_time, 0, sizeof(struct tm));
 	while ((ch = getopt(argc, argv, "f:o:t:")) != -1) {
 		switch (ch) {
@@ -76,16 +75,13 @@ main(int argc, char *argv[])
 			config_file = optarg;
 			break;
 		case 'o':
-			if (strncmp(optarg, "cmd", 3) == 0) {
+			if (strncmp(optarg, "cmd", 3) == 0)
 				output = output_cmd;
-				output_args = optarg+3;
-			} else if (strncmp(optarg, "html", 4) == 0) {
+			else if (strncmp(optarg, "html", 4) == 0)
 				output = output_html;
-				output_args = optarg+4;
-			} else if (strncmp(optarg, "mail", 4) == 0) {
+			else if (strncmp(optarg, "mail", 4) == 0)
 				output = output_mail;
-				output_args = optarg+4;
-			} else if (strncmp(optarg, "text", 4) == 0)
+			else if (strncmp(optarg, "text", 4) == 0)
 				output = output_text;
 			else if (strncmp(optarg, "null", 4) == 0)
 				output = NULL;

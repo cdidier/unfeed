@@ -56,9 +56,9 @@ enum PAGE_TYPE {
 	TYPE_ITEM
 };
 
-static char *template_page;
-static char *template_feed;
-static char *template_item;
+static char *page_template;
+static char *feed_template;
+static char *item_template;
 
 static void parse_template(const char *, int, void *);
 
@@ -78,7 +78,7 @@ page_markers(const char *m, struct feed *feeds)
 			    empty && item != NULL; item = SLIST_NEXT(item, next))
 				empty = item->flags & ITEM_OLD;
 			if (!empty)
-				parse_template(template_feed, TYPE_FEED, feed);
+				parse_template(feed_template, TYPE_FEED, feed);
 		}
 	}
 }
@@ -94,7 +94,7 @@ feed_markers(const char *m, struct feed *feed)
 	else if (strcmp(m, "ITEMS") == 0) {
 		SLIST_FOREACH(item, &feed->items, next) {
 			if (!(item->flags & ITEM_OLD))
-				parse_template(template_item, TYPE_ITEM, item);
+				parse_template(item_template, TYPE_ITEM, item);
 		}
 	}
 }
@@ -109,13 +109,13 @@ item_markers(const char *m, struct item *item)
 		printf("%s", item->title != NULL && *item->title != '\0' ?
 		    item->title : "(none)");
 	} else if (strcmp(m, "ITEM_LINK") == 0) {
-		printf("%s", item->link);
-	} else if (strcmp(m, "ITEM_DESCR") == 0) {
+		printf("%s", item->link != NULL ? item->link : "(none)");
+	} else if (strcmp(m, "ITEM_DESCR") == 0 && item->descr != NULL) {
 		printf("%s", item->descr);
 	} else if (strcmp(m, "ITEM_AUTHOR") == 0) {
-		printf("%s", item->author);
+		printf("%s", item->author != NULL ? item->author : "(none)");
 	} else if (strcmp(m, "ITEM_ID") == 0) {
-		printf("%s", item->id);
+		printf("%s", item->id != NULL ? item->id : "(none)");
 	} else if (strcmp(m, "ITEM_DATE") == 0) {
 		if (item->time != (time_t)-1) {
 			strftime(buf, sizeof(buf), "%a, %d %b %Y %T GMT",
@@ -199,11 +199,10 @@ parse_template(const char *file, int type, void *data)
 }
 
 void
-output_html(struct feed *feeds, const char *args)
+output_html(struct feed *feeds)
 {
-	template_page = template_feed = template_item = NULL;
-	if (args != NULL && *args != '\0') {
-		/* TODO custom templates */
-	}
-	parse_template(template_page, TYPE_PAGE, feeds);
+	page_template = getenv("UNFEED_HTML_PAGE_TEMPLATE");
+	feed_template = getenv("UNFEED_HTML_FEED_TEMPLATE");
+	item_template = getenv("UNFEED_HTML_ITEM_TEMPLATE");
+	parse_template(page_template, TYPE_PAGE, feeds);
 }

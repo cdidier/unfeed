@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2008 Colin Didier <cdidier@cybione.org>
+ * Copyright (c) 2008,2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -27,7 +27,7 @@
 
 #include "document.h"
 
-#define UNFEED_MAILCMD	"sendmail -eom %s"
+#define UNFEED_MAIL_CMD	"sendmail -eom %s"
 
 static void
 format_mail(const char *mail, struct feed *feed, struct item *item, int fd)
@@ -111,16 +111,17 @@ send_mail(const char *cmd, const char *mail, struct feed *feed,
 }
 
 void
-output_mail(struct feed *feeds, const char *args)
+output_mail(struct feed *feeds)
 {
 	SLIST_HEAD(, feed) list;
 	struct feed *feed;
 	struct item *item;
 	char *mail, *cmd, buf[BUFSIZ];
 
-	mail = getenv("USER");
-	if ((cmd = getenv("UNFEED_MAILCMD")) == NULL) {
-		snprintf(buf, sizeof(buf), UNFEED_MAILCMD, mail);
+	if ((mail = getenv("UNFEED_MAIL_USER")) == NULL)
+		mail = getenv("USER");
+	if ((cmd = getenv("UNFEED_MAIL_CMD")) == NULL) {
+		snprintf(buf, sizeof(buf), UNFEED_MAIL_CMD, mail);
 		cmd = buf;
 	}
 	SLIST_FIRST(&list) = feeds;

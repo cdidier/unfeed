@@ -60,7 +60,7 @@ print_text_item(struct feed *feed, struct item *item, FILE *stream)
 }
 
 void
-output_text(struct feed *feeds, const char *args)
+output_text(struct feed *feeds)
 {
 	SLIST_HEAD(, feed) list;
 	struct feed *feed;

@@ -63,7 +63,7 @@ run_cmd(const char *cmd, struct feed *feed, struct item *item)
 }
 
 void
-output_cmd(struct feed *feeds, const char *args)
+output_cmd(struct feed *feeds)
 {
 	SLIST_HEAD(, feed) list;
 	struct feed *feed;
