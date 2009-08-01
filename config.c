@@ -31,11 +31,11 @@
 void run_url(char *);
 
 struct feed {
-	char	*url;
-	struct tm	lasttime;
-	struct tm	newtime;
-	int	 ret;
-	SLIST_ENTRY(feed)	next;
+	char		*url;
+	struct tm	 lasttime;
+	struct tm	 newtime;
+	int		 ret;
+	SLIST_ENTRY(feed) next;
 };
 
 static void
