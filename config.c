@@ -30,16 +30,16 @@
 
 void run_url(char *);
 
-struct feed {
+struct config_feed {
 	char		*url;
 	struct tm	 lasttime;
 	struct tm	 newtime;
 	int		 ret;
-	SLIST_ENTRY(feed) next;
+	SLIST_ENTRY(config_feed) next;
 };
 
 static void
-fork_feed(struct feed *feed)
+fork_feed(struct config_feed *feed)
 {
 	extern struct tm param_time;
 	struct tm time_null;
@@ -63,11 +63,11 @@ fork_feed(struct feed *feed)
 }
 
 static void
-write_config(const char *config_file, struct feed *feeds)
+write_config(const char *config_file, struct config_feed *feeds)
 {
 	FILE *fin;
-	SLIST_HEAD(, feed) list = SLIST_HEAD_INITIALIZER(list);
-	struct feed *feed;
+	SLIST_HEAD(, config_feed) list = SLIST_HEAD_INITIALIZER(list);
+	struct config_feed *feed;
 	struct tm time_null;
 	char time[13];
 
@@ -101,8 +101,8 @@ void
 run_config(const char *config_file)
 {
 	FILE *fin;
-	SLIST_HEAD(, feed) list = SLIST_HEAD_INITIALIZER(list);
-	struct feed *feed, *tmp;
+	SLIST_HEAD(, config_feed) list = SLIST_HEAD_INITIALIZER(list);
+	struct config_feed *feed, *tmp;
 	char buf[BUFSIZ], *s, *t;
 	int line;
 
@@ -117,7 +117,7 @@ run_config(const char *config_file)
 				/* TODO shomptime */
 			}
 		}
-		if ((feed = malloc(sizeof(struct feed))) == NULL)
+		if ((feed = malloc(sizeof(struct config_feed))) == NULL)
 			err(1, "malloc");
 		if ((feed->url = strdup(buf)) == NULL)
 			err(1, "strdup");
