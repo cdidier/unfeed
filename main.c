@@ -52,6 +52,7 @@ run_url(char *url)
 	FILE *fin;
 	struct feed *feeds;
 	
+	fprintf(stderr, "Checking %s...\n", url); 
 	fin = strcmp(url, "-") == 0 ? stdin : request_url(url);
 	feeds = parse_feeds(fin);
 	filter_feeds(feeds, &param_time);
