@@ -1,11 +1,11 @@
-BIN= unfeed
+BIN = unfeed
 
-CFLAGS=-g -Wall -W -Wpointer-arith -Wbad-function-cast -Wno-unused-parameter
-LDFLAGS=-lexpat
+CFLAGS = -g -Wall -W -Wpointer-arith -Wbad-function-cast -Wno-unused-parameter
+LDFLAGS = -lexpat
 
-SRCS= config.c fetch.c filter.c format.c main.c parser.c tools.c \
+SRCS = config.c fetch.c filter.c format.c main.c parser.c tools.c \
 	output_cmd.c output_html.c output_mail.c output_text.c
-OBJS= ${SRCS:.c=.o}
+OBJS = ${SRCS:.c=.o}
 
 all: ${BIN}
 
