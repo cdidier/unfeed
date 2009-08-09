@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2008,2009 Colin Didier <cdidier@cybione.org>
+ * Copyright (c) 2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,112 +16,55 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdlib.h>
 #include <err.h>
-#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-
-#define HTTP_URL	"http://"
-#define HTTP_PORT	"80"
-#define HTTP_USER_AGENT	"User-Agent: unfeed"
-#define HTTP_LOCATION	"Location: "
-
-#define EMPTYSTRING(s)	((s) == NULL || (*(s) == '\0'))
+#ifdef __OpenBSD__
+#define UNFEED_FETCH "ftp -o -"
+#else
+#define UNFEED_FETCH "curl"
+#endif
 
 FILE *
-request_url(char *url)
+request_url(const char *url)
 {
-	char *newline, *host, *path, *credentials, *port, *cause;
-	char buf[BUFSIZ];
-	int s, error, save_errno;
-	struct addrinfo hints, *res0, *res;
-	FILE *fin;
+	extern char **environ;
+	int pip[2];
+	char *argp[] = {"sh", "-c", NULL, NULL };
+	char *cmd, *fullcmd;
+	size_t len;
+	FILE *stream;
 
-	/* Extract URL parts */
-	if ((newline = strdup(url)) == NULL)
-		err(1, "strdup");
-	if (strncasecmp(newline, HTTP_URL, sizeof(HTTP_URL)-1) != 0)	
-		errx(1, "Not an URL: %s", url);
-	host = newline + sizeof(HTTP_URL)-1;
-	if (EMPTYSTRING(host))
-		errx(1, "No host specified in the URL: %s", url);
-	path = strchr(host, '/');
-	if (!EMPTYSTRING(path))
-		*path++ = '\0';
-	if (EMPTYSTRING(path))
-		path = NULL;
-	credentials = strchr(host, '@');
-	if (!EMPTYSTRING(credentials))
-		host = credentials+1; /* ignore http credentials */
-	port = strchr(host, ':');
-	if (!EMPTYSTRING(port)) 
-		*port++ = '\0';
-	if (EMPTYSTRING(port))
-		port = HTTP_PORT;
-
-	/* Connect to the server */
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	error = getaddrinfo(host, port, &hints, &res0);
-	if (error == EAI_SERVICE)
-		error = getaddrinfo(host, HTTP_PORT, &hints, &res0);
-	if (error)
-		errx(1, "getaddrinfo: %s", gai_strerror(error));
-	s = -1;
-	for (res = res0; res; res = res->ai_next) {
-		if ((s = socket(res->ai_family, res->ai_socktype,
-		    res->ai_protocol)) < 0) {
-			cause = "socket";
-			continue;
-		}
-again:
-		if (connect(s, res->ai_addr, res->ai_addrlen) < 0) {
-			if (errno == EINTR)
-				goto again;
-			save_errno = errno;
-			close(s);
-			errno = save_errno;
-			s = -1;
-			cause = "connect";
-			continue;
-		}
-		break;
+	if (pipe(pip) == -1)
+		err(1, "pipe");
+	switch(fork()) {
+	case 0:
+		if (dup2(pip[1], STDOUT_FILENO) == -1)
+			err(1, "dup2");
+		close(STDERR_FILENO);
+		close(pip[0]);
+		close(pip[1]);
+		if ((cmd = getenv("UNFEED_FETCH")) == NULL)
+			cmd = UNFEED_FETCH;
+		len = strlen(cmd) + strlen(url) + 2;
+		if ((fullcmd = malloc(len)) == NULL)
+			err(1, "malloc");
+		snprintf(fullcmd, len, "%s %s", cmd, url);
+		argp[2] = fullcmd;
+		if (execve("/bin/sh", argp, environ) == -1)
+			err(1, "execve");
+		free(fullcmd);
+		exit(1);
+	case -1:
+		err(1, "fork");
+	default:
+		close(pip[1]);
+		if ((stream = fdopen(pip[0], "r")) == NULL)
+			err(1, "fdopen");
 	}
-	freeaddrinfo(res0);
-	if (s < 0)
-		err(1, cause);
-	if ((fin = fdopen(s, "r+")) == NULL)
-		err(1, "fdopen");
-
-	/* Send request */
-	if (fprintf(fin, "GET /%s HTTP/1.0\r\nHost: %s\r\n%s\r\n\r\n",
-	    path != NULL ? path : "", host, HTTP_USER_AGENT) < 0)
-		err(1, "fprintf");
-	if (fflush(fin) == EOF)
-		err(1, "Sending HTTP headers");
-	free(newline);
-
-	/* Parse headers */
-	if (fgets(buf, sizeof(buf), fin) == NULL)
-		err(1, "fgets");
-	buf[strcspn(buf, "\n")] = '\0';
-	/* TODO parse first line and extract codes */
-	while (*buf != '\r' && *buf != '\0'
-	    && fgets(buf, sizeof(buf), fin) != NULL) {
-		buf[strcspn(buf, "\n")] = '\0';
-		if (strncmp(buf, HTTP_LOCATION, sizeof(HTTP_LOCATION)-1) == 0) {
-			fclose(fin);
-			return request_url(buf+sizeof(HTTP_LOCATION)-1);
-		}
-		/* TODO parse other lines */
-	}
-
-	return fin;
+	return stream;
 }
