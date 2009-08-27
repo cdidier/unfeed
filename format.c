@@ -86,11 +86,11 @@ format_feeds(struct feed *feeds)
 	struct item *item;
 	char *cmd, *str;
 
-	if ((cmd = getenv("UNFEED_FORMAT")) == NULL)
+	if ((cmd = getenv("UNFEED_FORMAT")) == NULL || *cmd  == '\0')
 		return;
 	SLIST_FIRST(&list) = feeds;
 	SLIST_FOREACH(feed, &list, next) {
-		if (*cmd != '\0' &&  feed->title != NULL
+		if (feed->title != NULL && *feed->title != '\0'
 		    && (str = format_text(cmd, feed->title)) != NULL) {
 			strchomp(str);
 			stroneline(str);
@@ -98,19 +98,19 @@ format_feeds(struct feed *feeds)
 			feed->title = str;
 		}
 		SLIST_FOREACH(item, &feed->items, next) {
-			if (*cmd != '\0' &&  item->title != NULL
+			if (item->title != NULL && *item->title != '\0'
 			    && (str = format_text(cmd, item->title)) != NULL) {
 				strchomp(str);
 				stroneline(str);
 				free(item->title);
 				item->title = str;
 			}
-			if (*cmd != '\0' && item->descr != NULL
+			if (item->descr != NULL && *item->descr != '\0'
 			    && (str = format_text(cmd, item->descr)) != NULL) {
 				free(item->descr);
 				item->descr = str;
 			}
-			if (*cmd != '\0' &&  item->author != NULL
+			if (item->author != NULL && *item->author != '\0'
 			    && (str = format_text(cmd, item->author)) != NULL) {
 				strchomp(str);
 				stroneline(str);
