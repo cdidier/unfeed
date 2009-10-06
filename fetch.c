@@ -50,10 +50,10 @@ request_url(const char *url)
 		close(pip[1]);
 		if ((cmd = getenv("UNFEED_FETCH")) == NULL)
 			cmd = UNFEED_FETCH;
-		len = strlen(cmd) + strlen(url) + 2;
+		len = strlen(cmd) + strlen(url) + 4;
 		if ((fullcmd = malloc(len)) == NULL)
 			err(1, "malloc");
-		snprintf(fullcmd, len, "%s %s", cmd, url);
+		snprintf(fullcmd, len, "%s '%s'", cmd, url);
 		argp[2] = fullcmd;
 		if (execve("/bin/sh", argp, environ) == -1)
 			err(1, "execve");
