@@ -35,7 +35,7 @@ strchomp(char *s)
 	for (i = 0; s[i] != '\0' && isspace(s[i]); ++i);
 	if (i > 0)
 		for (; *s != '\0'; ++s)
-			*s = *(s+i);
+			*s = s[i];
 }
 
 void
