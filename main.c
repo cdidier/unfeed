@@ -36,13 +36,13 @@ void		 output_mail(struct feed *);
 void		 output_text(struct feed *);
 
 void		(*output)(struct feed *);
-struct tm	 param_time;
+struct tm	 param_date;
 
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: unfeed [-t time] [-o output] -f file\n"
-			"       unfeed [-t time] [-o output] url\n");
+	fprintf(stderr, "usage: unfeed [-d date] [-o output] -f file\n"
+			"       unfeed [-d date] [-o output] url\n");
 	exit(1);
 }
 
@@ -60,7 +60,7 @@ run_url(char *url)
 		fin = request_url(url);
 	}
 	feeds = parse_feeds(fin);
-	filter_feeds(feeds, &param_time);
+	filter_feeds(feeds, &param_date);
 	format_feeds(feeds);
 	fclose(fin);
 	if (output != NULL)
@@ -70,12 +70,12 @@ run_url(char *url)
 int
 main(int argc, char *argv[])
 {
-	char ch, *config_file, *t;
+	char ch, *config_file, *d;
 
 	output = output_text;
 	config_file = NULL;
-	memset(&param_time, 0, sizeof(struct tm));
-	while ((ch = getopt(argc, argv, "f:o:t:")) != -1) {
+	memset(&param_date, 0, sizeof(struct tm));
+	while ((ch = getopt(argc, argv, "f:o:d:")) != -1) {
 		switch (ch) {
 		case 'f':
 			config_file = optarg;
@@ -94,9 +94,9 @@ main(int argc, char *argv[])
 			else
 				errx(1, "Unknown output module");
 			break;
-		case 't':
-			t = strptime(optarg, "%Y%m%d%H%M", &param_time);
-			if (t == NULL || (*t != '\0' && *t != '\n'))
+		case 'd':
+			d = strptime(optarg, "%Y%m%d%H%M", &param_date);
+			if (d == NULL || (*d != '\0' && *d != '\n'))
 				errx(1, "Malformed time value");
 			break;
 		default:

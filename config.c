@@ -41,7 +41,7 @@ struct config_feed {
 static void
 fork_feed(struct config_feed *feed)
 {
-	extern struct tm param_time;
+	extern struct tm param_date;
 	struct tm time_null;
 	time_t now;
 
@@ -50,8 +50,8 @@ fork_feed(struct config_feed *feed)
 	switch(fork()) {
 	case 0:
 		memset(&time_null, 0, sizeof(struct tm));
-		if (memcmp(&param_time, &time_null, sizeof(struct tm)) == 0)
-			memcpy(&param_time, &feed->lasttime,
+		if (memcmp(&param_date, &time_null, sizeof(struct tm)) == 0)
+			memcpy(&param_date, &feed->lasttime,
 			    sizeof(struct tm));
 		run_url(feed->url);
 		exit(0);
