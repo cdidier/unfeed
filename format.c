@@ -27,11 +27,12 @@
 #include "document.h"
 
 void	strchomp(char *);
+void	strchomp_end(char *);
 void	stroneline(char *);
 int	insert_text(char **, const char *, size_t);
 
 static char *
-format_text(const char *cmd, const char *text)
+run_format_cmd(const char *cmd, const char *text)
 {
 	extern char **environ;
 	char buf[BUFSIZ], *str;
@@ -78,45 +79,41 @@ format_text(const char *cmd, const char *text)
 	return str;
 }
 
+static void
+format_text(const char *cmd, char **text, int chomp)
+{
+	char *str;
+
+	if (*text == NULL || **text == '\0')
+		return;
+	if (cmd != NULL && (str = run_format_cmd(cmd, *text)) != NULL) {
+		free(*text);
+		*text = str;
+	}
+	if (chomp) {
+		strchomp(*text);
+		stroneline(*text);
+	} else
+		strchomp_end(*text);
+}
+
 void
 format_feeds(struct feed *feeds)
 {
 	SLIST_HEAD(, feed) list;
 	struct feed *feed;
 	struct item *item;
-	char *cmd, *str;
+	char *cmd;
 
-	if ((cmd = getenv("UNFEED_FORMAT")) == NULL || *cmd  == '\0')
-		return;
+	if ((cmd = getenv("UNFEED_FORMAT")) == NULL || *cmd == '\0')
+		cmd = NULL;
 	SLIST_FIRST(&list) = feeds;
 	SLIST_FOREACH(feed, &list, next) {
-		if (feed->title != NULL && *feed->title != '\0'
-		    && (str = format_text(cmd, feed->title)) != NULL) {
-			strchomp(str);
-			stroneline(str);
-			free(feed->title);
-			feed->title = str;
-		}
+		format_text(cmd, &feed->title, 1);
 		SLIST_FOREACH(item, &feed->items, next) {
-			if (item->title != NULL && *item->title != '\0'
-			    && (str = format_text(cmd, item->title)) != NULL) {
-				strchomp(str);
-				stroneline(str);
-				free(item->title);
-				item->title = str;
-			}
-			if (item->descr != NULL && *item->descr != '\0'
-			    && (str = format_text(cmd, item->descr)) != NULL) {
-				free(item->descr);
-				item->descr = str;
-			}
-			if (item->author != NULL && *item->author != '\0'
-			    && (str = format_text(cmd, item->author)) != NULL) {
-				strchomp(str);
-				stroneline(str);
-				free(item->author);
-				item->author = str;
-			}
+			format_text(cmd, &item->title, 1);
+			format_text(cmd, &item->descr, 0);
+			format_text(cmd, &item->author, 1);
 		}
 	}
 }

@@ -23,19 +23,31 @@
 #include <string.h>
 #include <time.h>
 
-void
-strchomp(char *s)
+static void
+strchomp_begin(char *s)
 {
 	size_t i;
 
-	/* remove spaces at the end of the string */
-	for (i = strlen(s); i > 0 && isspace(s[i-1]); --i);
-	s[i] = '\0';
-	/* remove spaces at the beginning of the string */
 	for (i = 0; s[i] != '\0' && isspace(s[i]); ++i);
 	if (i > 0)
 		for (; *s != '\0'; ++s)
 			*s = s[i];
+}
+
+void
+strchomp_end(char *s)
+{
+	size_t i;
+
+	for (i = strlen(s); i > 0 && isspace(s[i-1]); --i);
+	s[i] = '\0';
+}
+
+void
+strchomp(char *s)
+{
+	strchomp_begin(s);
+	strchomp_end(s);
 }
 
 void
