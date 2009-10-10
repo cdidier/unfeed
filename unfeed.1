@@ -1,0 +1,87 @@
+.\"
+.\" $Id$
+.\"
+.\" Copyright (c) 2009 Colin Didier <cdidier@cybione.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate$
+.Dt UNFEED 1
+.Os
+.Sh NAME
+.Nm unfeed
+.Nd RSS/RDF/ATOM feed aggregator
+.Sh SYNOPSIS
+.Nm
+.Bk -words
+.Op Fl h
+.Op Fl d Ar date
+.Op Fl o Ar output
+.Ar url
+.Ek
+.Nm
+.Bk -words
+.Op Fl h
+.Op Fl d Ar date
+.Op Fl o Ar output
+.Fl f Ar file
+.Ek
+.Sh DESCRIPTION
+The
+.Nm
+tool can fetch, format and display news feeds. It supports RSS 1.0, RSS
+2.0, RDF and Atom feed formats.
+TODO
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl d Ar date
+TODO
+.It Fl o Ar output
+TODO
+.Pp
+The output modes available are as follows:
+.Pp
+.Bl -tag -width Ds
+.It Ar cmd
+Command output, see the section
+.Sx COMMAND OUTPUT
+below for more information.
+.It Ar html
+HTML output, see the section
+.Sx HTML OUTPUT
+below for more information.
+.It Ar mail
+Mail output, see the section
+.Sx MAIL OUTPUT
+below for more information.
+.It Ar text
+Text output, this is the default output mode.
+.It Ar null
+No output.
+.El
+.El
+.Sh COMMAND OUTPUT
+TODO
+.Sh HTML OUTPUT
+TODO
+.Sh MAIL OUTPUT
+TODO
+.Sh EXAMPLES
+TODO
+.Sh SEE ALSO
+.Xr ftp 1 ,
+.Xr lynx 1 ,
+.Xr sendmail 8
+.Sh AUTHORS
+Colin Didier
