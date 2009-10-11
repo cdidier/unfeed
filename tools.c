@@ -53,23 +53,11 @@ strchomp(char *s)
 void
 stroneline(char *s)
 {
-	size_t len, i, spaces;
-	char *p1, *p2;
-	
-	for (p1 = s; *p1 != '\0'; ++p1) {
-		if (isspace(*p1)) {
-			*p1 = ' ';
-			p2 = p1;
-			spaces = 0;
-			while (*(p2++) != '\0' && isspace(*p2))
-				++spaces;
-			if (spaces > 0) {
-				len = strlen(p1);
-				for (i = 0; i < len-spaces+1; ++i)
-					p1[i-spaces] = p1[i];
-			}
+	for (; *s != '\0'; ++s)
+		if (isspace(*s)) {
+			*s = ' ';
+			strchomp_begin(s+1);
 		}
-	}
 }
 
 int
