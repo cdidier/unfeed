@@ -27,7 +27,7 @@
 #include "document.h"
 
 void	strchomp(char *);
-void	strchomp_end(char *);
+void	strchomp_lines(char *);
 void	stroneline(char *);
 int	insert_text(char **, const char *, size_t);
 
@@ -94,7 +94,7 @@ format_text(const char *cmd, char **text, int chomp)
 		strchomp(*text);
 		stroneline(*text);
 	} else
-		strchomp_end(*text);
+		strchomp_lines(*text);
 }
 
 void

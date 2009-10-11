@@ -23,18 +23,22 @@
 #include <string.h>
 #include <time.h>
 
+#include <stdio.h>
+
 static void
 strchomp_begin(char *s)
 {
 	size_t i;
 
 	for (i = 0; s[i] != '\0' && isspace(s[i]); ++i);
-	if (i > 0)
-		for (; *s != '\0'; ++s)
+	if (i > 0) {
+		for (; s[i] != '\0'; ++s)
 			*s = s[i];
+		*s = '\0';
+	}
 }
 
-void
+static void
 strchomp_end(char *s)
 {
 	size_t i;
@@ -42,6 +46,29 @@ strchomp_end(char *s)
 	for (i = strlen(s); i > 0 && isspace(s[i-1]); --i);
 	s[i] = '\0';
 }
+
+void
+strchomp_lines(char *s)
+{
+	size_t i;
+	char *p1, *p2;
+	int have_char;
+
+	have_char = 0;
+	while ((p1 = strpbrk(s, "\n\r")) != NULL && !have_char) {
+		for (p2 = s; p2 < p1 && !have_char; ++p2)
+			if (!isspace(*p2))
+				have_char = 1;
+		if (!have_char) {
+			for (i = 0; s[i+p2-s+1] != '\0'; ++i)
+				s[i] = s[i+p2-s+1];
+			s[i] = '\0';
+		}
+		p1 = p2+1;
+	}
+	strchomp_end(s);
+}
+
 
 void
 strchomp(char *s)
