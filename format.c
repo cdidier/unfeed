@@ -103,6 +103,7 @@ format_feeds(struct feed *feeds)
 	SLIST_HEAD(, feed) list;
 	struct feed *feed;
 	struct item *item;
+	struct category *cat;
 	char *cmd;
 
 	if ((cmd = getenv("UNFEED_FORMAT")) == NULL || *cmd == '\0')
@@ -112,8 +113,11 @@ format_feeds(struct feed *feeds)
 		format_text(cmd, &feed->title, 1);
 		SLIST_FOREACH(item, &feed->items, next) {
 			format_text(cmd, &item->title, 1);
-			format_text(cmd, &item->descr, 0);
 			format_text(cmd, &item->author, 1);
+			format_text(NULL, &item->link, 1);
+			SLIST_FOREACH(cat, &item->categories, next)
+				format_text(cmd, &cat->name, 1);
+			format_text(cmd, &item->descr, 0);
 		}
 	}
 }
