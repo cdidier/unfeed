@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define _DEFAULT_SOURCE
+#define _XOPEN_SOURCE
 #include <ctype.h>
 #include <errno.h>
 #include <stdint.h>
