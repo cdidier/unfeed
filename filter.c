@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Copyright (c) 2009 Colin Didier <cdidier@cybione.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
