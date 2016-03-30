@@ -160,7 +160,7 @@ parse_line(char *line, int type, void *data)
 static void
 parse_template(const char *file, int type, void *data)
 {
-	char buf[BUFSIZ], *a, *b;
+	char buf[BUFSIZ], *a = NULL, *b;
 	FILE *fin;
 
 	if (file != NULL) {

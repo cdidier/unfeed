@@ -308,7 +308,7 @@ rdf_start_elt(void *user_data, const char *name, const char **atts)
 		}
 		if (strcasecmp(name, RDF_ITEM) == 0) {
 			int i;
-			const char *s;
+			const char *s = NULL;
 			
 			for (i = 0; atts[i] != NULL; i += 2)
 				if (strcasecmp(atts[i], RDF_ID) == 0)
@@ -337,7 +337,7 @@ rdf_start_elt(void *user_data, const char *name, const char **atts)
 			break;
 		if (strcasecmp(name, RDF_LIST_ITEM) == 0) {
 			int i;
-			const char *s;
+			const char *s = NULL;
 
 			for (i = 0; atts[i] != NULL; i += 2)
 				if (strcasecmp(atts[i], RDF_LIST_ID) == 0)
