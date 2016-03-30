@@ -163,13 +163,13 @@ parse_template(const char *file, int type, void *data)
 	char buf[BUFSIZ], *a, *b;
 	FILE *fin;
 
-        if (file != NULL) {
-                if ((fin = fopen(file, "r")) == NULL)
-                        err(1, "fopen: %s", file);
-                while (fgets(buf, sizeof(buf), fin) != NULL) {
-                        buf[strcspn(buf, "\n")] = '\0';
-                        parse_line(buf, type, data);
-                }
+	if (file != NULL) {
+		if ((fin = fopen(file, "r")) == NULL)
+			err(1, "fopen: %s", file);
+		while (fgets(buf, sizeof(buf), fin) != NULL) {
+			buf[strcspn(buf, "\n")] = '\0';
+			parse_line(buf, type, data);
+		}
 	} else {
 		switch (type) {
 		case TYPE_PAGE:
